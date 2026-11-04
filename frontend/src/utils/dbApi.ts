@@ -3,8 +3,7 @@
 
 import { UserProfile, GameRecord } from '../types/chess';
 
-const API_HOST = (import.meta as any).env?.VITE_API_URL || (import.meta as any).env?.DEV ? 'http://127.0.0.1:8000' : '';
-const API_BASE = `${API_HOST}/api/db`;
+const API_BASE = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000') + '/api/db';
 
 /**
  * Register a new user in SQLite DB
