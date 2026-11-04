@@ -1,0 +1,115 @@
+{
+  "engineCorrectness": {
+    "alphaBetaPruning": "Not implemented as classical recursive alpha-beta tree; instead implements a 2-ply flat minimax lookahead with 14-move tactical beam search and 1-ply capture quiescence.",
+    "quiescenceSearch": "Evaluates up to 5 immediate recaptures following opponent captures.",
+    "pieceSquareTables": {
+      "pawn_rank2_values": [
+        50,
+        50,
+        50,
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "pawn_rank7_values": [
+        5,
+        10,
+        10,
+        -20,
+        -20,
+        10,
+        10,
+        5
+      ],
+      "orientation_finding": "Identified PST orientation inversion: PAWN_PST indices 8..15 (Rank 2) hold values [+50, ...], which correspond to Rank 7 in standard top-down chess programming literature. Pawns advancing towards Rank 7 received +10 / -20 instead of the +50 promotion approach bonus. Corrected in evaluation."
+    },
+    "kingSafety": "King-distance penalty and destination square defense checks.",
+    "legalMoveGeneration": "Strictly enforced by python-chess board.legal_moves; 0 illegal moves generated across 500+ tested positions.",
+    "specialRules": {
+      "castling": "Verified functional",
+      "enPassant": "Verified functional",
+      "pawnPromotion": "Verified functional",
+      "checkmateHandling": "Verified (+99999 / -99999 centipawns)",
+      "stalemateHandling": "Verified (0 centipawns)"
+    }
+  },
+  "hybridScoringVerification": {
+    "personalizationWeightConfigurable": true,
+    "fixedZeroWeightBug": "Fixed bug in backend/main.py where personalizationWeight=0.0 was overridden to 0.65 due to python truthiness check.",
+    "antiBlunderFilter": "Tested on tactical puzzle suite; successfully prevented queen loss and back-rank mate at w=0.65.",
+    "tacticalPuzzleResults": [
+      {
+        "puzzle_id": "Mate-in-1",
+        "description": "Scholar's mate motif: Qxf7# delivers instant checkmate",
+        "move_weight_0": "f3f7",
+        "move_weight_0_65": "f3f7",
+        "move_weight_1_0": "f3f7",
+        "passed_weight_0": true,
+        "passed_weight_0_65": true,
+        "passed_weight_1_0": true,
+        "blunder_prevented": true
+      },
+      {
+        "puzzle_id": "Back-Rank-Mate",
+        "description": "Rb8# back-rank checkmate",
+        "move_weight_0": "b1b8",
+        "move_weight_0_65": "b1b8",
+        "move_weight_1_0": "b1b8",
+        "passed_weight_0": true,
+        "passed_weight_0_65": true,
+        "passed_weight_1_0": true,
+        "blunder_prevented": true
+      },
+      {
+        "puzzle_id": "Hanging-Queen-Escape",
+        "description": "Queen on d4 attacked by c5 pawn; moving a random pawn loses queen",
+        "move_weight_0": "d4e5",
+        "move_weight_0_65": "d4e5",
+        "move_weight_1_0": "d4e5",
+        "passed_weight_0": true,
+        "passed_weight_0_65": true,
+        "passed_weight_1_0": true,
+        "blunder_prevented": true
+      },
+      {
+        "puzzle_id": "Free-Piece-Capture",
+        "description": "White knight can capture undefended bishop on e5",
+        "move_weight_0": "f3e5",
+        "move_weight_0_65": "f3e5",
+        "move_weight_1_0": "f3e5",
+        "passed_weight_0": true,
+        "passed_weight_0_65": true,
+        "passed_weight_1_0": true,
+        "blunder_prevented": true
+      },
+      {
+        "puzzle_id": "Avoid-Stalemate",
+        "description": "Winning queen endgame: Qb6 gives stalemate (draw), any other check/approach keeps win",
+        "move_weight_0": "e1f2",
+        "move_weight_0_65": "e1f1",
+        "move_weight_1_0": "e1f1",
+        "passed_weight_0": true,
+        "passed_weight_0_65": true,
+        "passed_weight_1_0": true,
+        "blunder_prevented": true
+      }
+    ]
+  },
+  "eloTesting": {
+    "claimedElo": "2200 Elo (Historical Peak Human Reference Label)",
+    "verifiedStatus": "UNVERIFIED (Official FIDE/USCF/CCRCS Standard)",
+    "testingMethod": "20-game automated match tournament with alternating colors against calibrated depth-2 tactical heuristic engine (1400 Elo baseline)",
+    "tournamentStats": {
+      "totalGames": 20,
+      "vickyWins": 14,
+      "vickyLosses": 0,
+      "draws": 6,
+      "winRate": 85.0,
+      "estimatedEngineEloAgainstBaseline": 1701,
+      "confidenceInterval95": "\u00b1213 Elo"
+    },
+    "criticalEloFinding": "The 2200 Elo figure is an aspirational marketing label derived from Viknesh's personal high-accuracy human games, NOT a scientifically verified engine playing rating. A 2-ply hybrid Minimax engine with XGBoost move ranking typically plays at 1450-1650 Elo in standard time controls. FIDE/USCF Elo remains UNVERIFIED."
+  }
+}

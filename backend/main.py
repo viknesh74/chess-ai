@@ -207,9 +207,10 @@ def get_vicky_profile():
 @app.post("/api/vicky-move")
 def calculate_move(req: MoveRequest):
     try:
+        pw = req.personalizationWeight if req.personalizationWeight is not None else 0.65
         result = engine.select_vicky_move(
             fen=req.fen,
-            personalization_weight=req.personalizationWeight or 0.65,
+            personalization_weight=pw,
             history_moves=req.historyMoves,
             difficulty=req.difficulty or "master"
         )

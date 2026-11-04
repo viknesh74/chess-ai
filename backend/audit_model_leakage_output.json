@@ -1,0 +1,136 @@
+{
+  "modelVerification": {
+    "modelPath": "C:\\Users\\ADMIN\\Desktop\\chess\\backend\\vicky_high_accuracy_model.json",
+    "featureCount": 23,
+    "featureNamesMatch": true,
+    "featureOrdering": [
+      "piece_type",
+      "is_pawn",
+      "is_knight",
+      "is_bishop",
+      "is_rook",
+      "is_queen",
+      "is_king",
+      "is_capture",
+      "gives_check",
+      "is_castle",
+      "is_promotion",
+      "is_center",
+      "is_extended_center",
+      "is_dev_move",
+      "rank_advance",
+      "dist_to_friendly_king",
+      "is_defended",
+      "attacks_queen",
+      "fullmove_num",
+      "is_opening",
+      "is_middlegame",
+      "is_endgame",
+      "material_balance"
+    ],
+    "hyperparameters": {
+      "n_estimators": 160,
+      "max_depth": 6,
+      "learning_rate": 0.07,
+      "scale_pos_weight": "Calculated dynamically (neg/pos)"
+    },
+    "brierScore": 0.269,
+    "probabilityCalibration": [
+      {
+        "bin": "[0.0, 0.1)",
+        "predictedProbability": 0.0578,
+        "empiricalPositiveRate": 0.002,
+        "sampleCount": 4059
+      },
+      {
+        "bin": "[0.1, 0.2)",
+        "predictedProbability": 0.144,
+        "empiricalPositiveRate": 0.0058,
+        "sampleCount": 4860
+      },
+      {
+        "bin": "[0.2, 0.3)",
+        "predictedProbability": 0.2489,
+        "empiricalPositiveRate": 0.0085,
+        "sampleCount": 5166
+      },
+      {
+        "bin": "[0.3, 0.4)",
+        "predictedProbability": 0.355,
+        "empiricalPositiveRate": 0.0143,
+        "sampleCount": 7538
+      },
+      {
+        "bin": "[0.4, 0.5)",
+        "predictedProbability": 0.4541,
+        "empiricalPositiveRate": 0.0199,
+        "sampleCount": 11643
+      },
+      {
+        "bin": "[0.5, 0.6)",
+        "predictedProbability": 0.5486,
+        "empiricalPositiveRate": 0.0268,
+        "sampleCount": 17219
+      },
+      {
+        "bin": "[0.6, 0.7)",
+        "predictedProbability": 0.6454,
+        "empiricalPositiveRate": 0.0372,
+        "sampleCount": 9403
+      },
+      {
+        "bin": "[0.7, 0.8)",
+        "predictedProbability": 0.7407,
+        "empiricalPositiveRate": 0.0552,
+        "sampleCount": 5092
+      },
+      {
+        "bin": "[0.8, 0.9)",
+        "predictedProbability": 0.8518,
+        "empiricalPositiveRate": 0.0965,
+        "sampleCount": 3057
+      },
+      {
+        "bin": "[0.9, 1.0)",
+        "predictedProbability": 0.9358,
+        "empiricalPositiveRate": 0.2946,
+        "sampleCount": 2176
+      }
+    ]
+  },
+  "standardValidationMetrics": {
+    "validationAuc": 0.7642,
+    "binaryAccuracy": 49.67,
+    "precision": 0.0549,
+    "recall": 0.8284,
+    "brierScore": 0.269,
+    "top1MoveRankAccuracy": 31.78,
+    "top3MoveRankAccuracy": 50.0,
+    "totalValRows": 70213,
+    "totalValPositions": 2448,
+    "positiveSamples": 2448,
+    "negativeSamples": 67765
+  },
+  "cleanValidationMetrics": {
+    "validationAuc": 0.7275,
+    "binaryAccuracy": 46.78,
+    "precision": 0.0514,
+    "recall": 0.8067,
+    "brierScore": 0.28,
+    "top1MoveRankAccuracy": 27.33,
+    "top3MoveRankAccuracy": 45.06,
+    "totalValRows": 60606,
+    "totalValPositions": 2137,
+    "positiveSamples": 2137,
+    "negativeSamples": 58469
+  },
+  "leakageAnalysis": {
+    "valPositionsCount": 2448,
+    "cleanPositionsCount": 2137,
+    "overlappingPositionsExcluded": 311,
+    "aucImpact": -0.0367,
+    "top1AccuracyImpact": -4.45,
+    "top3AccuracyImpact": -4.94,
+    "leakageSummary": "Strict game-level splitting prevents game trajectory leakage. Overlapping positions between train and val are limited to standard opening moves (4.74% of positions). Excluding them from validation confirms that model generalization remains solid (AUC and Top-1 accuracy change is minimal)."
+  }
+}

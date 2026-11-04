@@ -24,8 +24,15 @@ PIECE_VALUES = {
     chess.KING: 20000
 }
 
-# Standard Piece-Square Tables (Midgame)
-PAWN_PST = [
+# Standard Piece-Square Tables (Midgame) - Flipped for python-chess native indexing (a1=0, h1=7, a8=56, h8=63)
+def _orient_pst(c_table):
+    """Flips visual/C top-down (Rank 8 at index 0) tables into python-chess native order (Rank 1 at index 0)."""
+    res = []
+    for r in range(7, -1, -1):
+        res.extend(c_table[r*8:(r+1)*8])
+    return res
+
+PAWN_PST = _orient_pst([
      0,  0,  0,  0,  0,  0,  0,  0,
     50, 50, 50, 50, 50, 50, 50, 50,
     10, 10, 20, 30, 30, 20, 10, 10,
@@ -34,9 +41,9 @@ PAWN_PST = [
      5, -5,-10,  0,  0,-10, -5,  5,
      5, 10, 10,-20,-20, 10, 10,  5,
      0,  0,  0,  0,  0,  0,  0,  0
-]
+])
 
-KNIGHT_PST = [
+KNIGHT_PST = _orient_pst([
     -50,-40,-30,-30,-30,-30,-40,-50,
     -40,-20,  0,  0,  0,  0,-20,-40,
     -30,  0, 10, 15, 15, 10,  0,-30,
@@ -45,9 +52,9 @@ KNIGHT_PST = [
     -30,  5, 10, 15, 15, 10,  5,-30,
     -40,-20,  0,  5,  5,  0,-20,-40,
     -50,-40,-30,-30,-30,-30,-40,-50
-]
+])
 
-BISHOP_PST = [
+BISHOP_PST = _orient_pst([
     -20,-10,-10,-10,-10,-10,-10,-20,
     -10,  0,  0,  0,  0,  0,  0,-10,
     -10,  0,  5, 10, 10,  5,  0,-10,
@@ -56,9 +63,9 @@ BISHOP_PST = [
     -10, 10, 10, 10, 10, 10, 10,-10,
     -10,  5,  0,  0,  0,  0,  5,-10,
     -20,-10,-10,-10,-10,-10,-10,-20
-]
+])
 
-ROOK_PST = [
+ROOK_PST = _orient_pst([
       0,  0,  0,  0,  0,  0,  0,  0,
       5, 10, 10, 10, 10, 10, 10,  5,
      -5,  0,  0,  0,  0,  0,  0, -5,
@@ -67,9 +74,9 @@ ROOK_PST = [
      -5,  0,  0,  0,  0,  0,  0, -5,
      -5,  0,  0,  0,  0,  0,  0, -5,
       0,  0,  0,  5,  5,  0,  0,  0
-]
+])
 
-QUEEN_PST = [
+QUEEN_PST = _orient_pst([
     -20,-10,-10, -5, -5,-10,-10,-20,
     -10,  0,  0,  0,  0,  0,  0,-10,
     -10,  0,  5,  5,  5,  5,  0,-10,
@@ -78,7 +85,7 @@ QUEEN_PST = [
     -10,  5,  5,  5,  5,  5,  0,-10,
     -10,  0,  5,  0,  0,  0,  0,-10,
     -20,-10,-10, -5, -5,-10,-10,-20
-]
+])
 
 # Master Opening Book for Viknesh's signature high-accuracy repertoire
 MASTER_OPENING_BOOK = {
