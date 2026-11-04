@@ -33,14 +33,14 @@ export const EvaluationBar: React.FC<EvaluationBarProps> = ({
   }
 
   return (
-    <div className="relative w-7 h-full min-h-[360px] bg-[#1e1e1e] rounded-lg overflow-hidden border border-[#333] flex flex-col justify-end shadow-inner select-none">
+    <div className="relative w-2.5 sm:w-6 self-stretch my-1 rounded-md sm:rounded-lg overflow-hidden border border-[#333] flex flex-col justify-end shadow-inner select-none shrink-0 bg-[#1e1e1e]">
       {/* Black's portion */}
       <div
         className="w-full bg-[#1b1b1b] transition-all duration-500 ease-out flex items-start justify-center pt-1"
         style={{ height: `${100 - displayPercent}%` }}
       >
         {displayPercent < 50 && (
-          <span className="text-[10px] font-mono font-bold text-gray-300">
+          <span className="hidden sm:inline text-[9px] font-mono font-bold text-gray-300">
             {label}
           </span>
         )}
@@ -55,7 +55,7 @@ export const EvaluationBar: React.FC<EvaluationBarProps> = ({
         style={{ height: `${displayPercent}%` }}
       >
         {displayPercent >= 50 && (
-          <span className="text-[10px] font-mono font-bold text-gray-800">
+          <span className="hidden sm:inline text-[9px] font-mono font-bold text-gray-800">
             {label}
           </span>
         )}

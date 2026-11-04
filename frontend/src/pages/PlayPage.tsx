@@ -98,6 +98,7 @@ export const PlayPage: React.FC<PlayPageProps> = ({
 
   // Player Color (default White)
   const [playerColor, setPlayerColor] = useState<'w' | 'b'>('w');
+  const [mobilePanel, setMobilePanel] = useState<'mind' | 'moves'>('mind');
 
   // Load persistent game state per user (resets if new account has no game)
   useEffect(() => {
@@ -610,85 +611,83 @@ export const PlayPage: React.FC<PlayPageProps> = ({
   const isUserTurn = chess.turn() === playerColor && !gameOver;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6 space-y-6 animate-fade-in">
-      {/* Top Match Info Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-[#1e1e1e] border border-[#2c2c30] p-4 rounded-2xl shadow-lg">
-        <div className="flex items-center space-x-3">
+    <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-6 space-y-3 sm:space-y-6 animate-fade-in">
+      {/* Top Match Info Header - Ultra Clean & Responsive */}
+      <div className="flex items-center justify-between gap-2 bg-[#1e1e1e] border border-[#2c2c30] p-2.5 sm:p-4 rounded-xl sm:rounded-2xl shadow-lg">
+        <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
           {onBack && (
             <button
               onClick={onBack}
-              className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-[#27272a] hover:bg-[#333] text-gray-200 hover:text-white text-xs font-bold border border-[#38383e] transition-all transform active:scale-95 shadow-sm"
+              className="flex items-center space-x-1 px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-lg sm:rounded-xl bg-[#27272a] hover:bg-[#333] text-gray-200 hover:text-white text-xs font-bold border border-[#38383e] transition-all transform active:scale-95 shrink-0"
               title="Back to Dashboard"
             >
-              <ArrowLeft className="w-4 h-4 text-[#81b64c]" />
-              <span>Back</span>
+              <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#81b64c]" />
+              <span className="hidden xs:inline">Back</span>
             </button>
           )}
 
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#81b64c] to-emerald-400 flex items-center justify-center text-white font-black text-lg shadow-lg">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-tr from-[#81b64c] to-emerald-400 flex items-center justify-center text-white font-black text-sm sm:text-lg shadow-md shrink-0">
             ♟
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-base font-extrabold text-white tracking-tight">
+
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 truncate">
+              <span className="text-xs sm:text-base font-extrabold text-white truncate max-w-[85px] sm:max-w-none">
                 {playerName.toUpperCase()}
               </span>
-              <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">
-                vs
-              </span>
-              <span className="text-base font-extrabold text-[#81b64c] tracking-tight">
-                VICKY AI
-              </span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-950/80 text-red-300 border border-red-700/60 inline-flex items-center space-x-1 shrink-0">
+              <span className="text-[10px] sm:text-xs text-gray-500 font-bold uppercase">vs</span>
+              <span className="text-xs sm:text-base font-extrabold text-[#81b64c]">VICKY AI</span>
+              <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-950/80 text-red-300 border border-red-700/60 shrink-0">
                 <span>🔥 MASTER AI</span>
               </span>
             </div>
-            <div className="flex flex-wrap items-center gap-2 text-xs text-gray-400 mt-1">
+            <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-gray-400 mt-0.5">
               <span className="font-mono text-emerald-400 font-bold">10+0 Rapid</span>
               <span>•</span>
               <span className="text-gray-300 font-medium">
-                {gameOver ? 'Game Finished' : gameStarted ? 'In Progress' : 'Ready to Start'}
+                {gameOver ? 'Finished' : gameStarted ? 'Playing' : 'Ready'}
               </span>
             </div>
           </div>
         </div>
 
-        {/* Board Actions: Flip, Result, Generate New Board */}
-        <div className="flex items-center space-x-2">
+        {/* Board Actions: Flip & Generate New Board */}
+        <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
           {gameOver && !showGameOverModal && (
             <button
               onClick={() => setShowGameOverModal(true)}
-              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-semibold hover:bg-amber-500/30 transition-colors"
+              className="flex items-center space-x-1 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-semibold hover:bg-amber-500/30 transition-colors"
             >
               <Trophy className="w-3.5 h-3.5" />
-              <span>Result Summary</span>
+              <span className="hidden sm:inline">Result</span>
             </button>
           )}
 
           <button
             onClick={() => setIsFlipped(!isFlipped)}
-            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-[#27272a] hover:bg-[#333] text-gray-200 text-xs font-semibold border border-[#38383e] transition-colors"
+            className="flex items-center space-x-1 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl bg-[#27272a] hover:bg-[#333] text-gray-200 text-xs font-semibold border border-[#38383e] transition-colors"
             title="Flip Board"
           >
-            <RotateCw className="w-4 h-4 text-gray-400" />
-            <span>Flip Board</span>
+            <RotateCw className="w-3.5 h-3.5 text-gray-400" />
+            <span className="hidden sm:inline">Flip</span>
           </button>
 
           <button
             onClick={handleNewGame}
-            className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-[#81b64c] hover:bg-[#95c65d] text-white text-xs font-extrabold shadow-md shadow-green-950/30 transition-transform transform active:scale-95"
+            className="flex items-center space-x-1 px-3 py-1.5 sm:px-3.5 sm:py-1.5 rounded-lg sm:rounded-xl bg-[#81b64c] hover:bg-[#95c65d] text-white text-xs font-extrabold shadow-md shadow-green-950/30 transition-transform transform active:scale-95"
             title="Generate a brand new starting board"
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Generate New Board</span>
+            <span className="hidden xs:inline">New Board</span>
+            <span className="xs:hidden">New</span>
           </button>
         </div>
       </div>
 
       {/* Main Arena Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-6 items-start">
         {/* Left Column: Board + Clocks (7 cols) */}
-        <div className="lg:col-span-7 space-y-3">
+        <div className="lg:col-span-7 space-y-2 sm:space-y-3">
           {/* Vicky's Clock (Top) */}
           <Clock
             timeSeconds={vickyTime}
@@ -699,13 +698,13 @@ export const PlayPage: React.FC<PlayPageProps> = ({
           />
 
           {/* Board with Evaluation Bar */}
-          <div className="flex items-stretch justify-center space-x-3">
+          <div className="flex items-stretch justify-center space-x-1.5 sm:space-x-3">
             <EvaluationBar
               scoreCentipawns={scoreCentipawns}
               flipped={isFlipped}
             />
 
-            <div className="flex-1 max-w-[620px]">
+            <div className="flex-1 max-w-[620px] w-full">
               <Chessboard
                 chess={chess}
                 isFlipped={isFlipped}
@@ -727,22 +726,22 @@ export const PlayPage: React.FC<PlayPageProps> = ({
           />
 
           {/* Controls Bar */}
-          <div className="flex items-center justify-between bg-[#1e1e1e] border border-[#2c2c30] p-3 rounded-xl text-xs">
-            <div className="flex items-center space-x-2">
-              <span className="text-gray-400">Game Status:</span>
-              <span className={`font-semibold ${gameOver ? (gameResult === 'win' ? 'text-emerald-400' : gameResult === 'loss' ? 'text-red-400' : 'text-blue-400') : 'text-white'}`}>
+          <div className="flex items-center justify-between bg-[#1e1e1e] border border-[#2c2c30] p-2.5 sm:p-3 rounded-xl text-xs">
+            <div className="flex items-center space-x-2 truncate">
+              <span className="text-gray-400">Status:</span>
+              <span className={`font-semibold truncate ${gameOver ? (gameResult === 'win' ? 'text-emerald-400' : gameResult === 'loss' ? 'text-red-400' : 'text-blue-400') : 'text-white'}`}>
                 {gameOver
                   ? `Completed (${gameOverReason || (gameResult === 'win' ? 'Victory' : gameResult === 'loss' ? 'Defeat' : 'Draw')})`
                   : isUserTurn
                   ? 'Your turn'
                   : isVickyThinking
-                  ? 'Vicky is thinking...'
+                  ? 'Vicky thinking...'
                   : 'Ready'}
               </span>
             </div>
 
             {gameOver ? (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 shrink-0">
                 {onBack && (
                   <button
                     onClick={() => {
@@ -761,11 +760,11 @@ export const PlayPage: React.FC<PlayPageProps> = ({
                   className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-[#81b64c] hover:bg-[#95c65d] text-white font-extrabold shadow-sm transition-transform transform active:scale-95"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>Generate New Board</span>
+                  <span>New Game</span>
                 </button>
               </div>
             ) : (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 shrink-0">
                 <button
                   onClick={handleOfferDraw}
                   disabled={!gameStarted}
@@ -788,17 +787,47 @@ export const PlayPage: React.FC<PlayPageProps> = ({
           </div>
         </div>
 
-        {/* Right Column: Move Log & Vicky Mind (5 cols) */}
-        <div className="lg:col-span-5 space-y-4">
-          {/* Vicky Mind Thought Card */}
-          <VickyThoughtCard
-            decision={vickyDecision}
-            isThinking={isVickyThinking}
-            personalizationWeight={settings.personalizationWeight}
-          />
+        {/* Right Column: Move Log & Vicky Mind */}
+        <div className="lg:col-span-5 space-y-3 sm:space-y-4">
+          {/* Mobile Tab Switcher (Visible on mobile/tablet, hidden on desktop lg) */}
+          <div className="flex lg:hidden rounded-xl bg-[#1e1e22] p-1 border border-[#2c2c30]">
+            <button
+              onClick={() => setMobilePanel('mind')}
+              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center space-x-1.5 ${
+                mobilePanel === 'mind'
+                  ? 'bg-[#81b64c] text-white shadow-sm'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <span>🧠 Vicky's Mind</span>
+              {isVickyThinking && <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />}
+            </button>
+            <button
+              onClick={() => setMobilePanel('moves')}
+              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center space-x-1.5 ${
+                mobilePanel === 'moves'
+                  ? 'bg-[#81b64c] text-white shadow-sm'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <span>📜 Move History</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-[#18181b] text-gray-300">
+                {sanMoves.length}
+              </span>
+            </button>
+          </div>
 
-          {/* Move Log History Component */}
-          <div className="h-[340px]">
+          {/* Vicky Mind Thought Card (Shown on desktop, or on mobile when mind tab is active) */}
+          <div className={`${mobilePanel === 'mind' ? 'block' : 'hidden lg:block'}`}>
+            <VickyThoughtCard
+              decision={vickyDecision}
+              isThinking={isVickyThinking}
+              personalizationWeight={settings.personalizationWeight}
+            />
+          </div>
+
+          {/* Move Log History Component (Shown on desktop, or on mobile when moves tab is active) */}
+          <div className={`h-[300px] sm:h-[340px] ${mobilePanel === 'moves' ? 'block' : 'hidden lg:block'}`}>
             <MoveHistory
               sanMoves={sanMoves}
               currentMoveIndex={currentMoveIdx}

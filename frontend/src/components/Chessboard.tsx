@@ -173,9 +173,9 @@ export const Chessboard: React.FC<ChessboardProps> = ({
   };
 
   return (
-    <div className="relative w-full aspect-square max-w-[620px] mx-auto select-none rounded-xl overflow-hidden shadow-2xl border-4 border-[#2b2b2e]">
+    <div className="relative w-full aspect-square max-w-[620px] mx-auto select-none rounded-xl overflow-hidden shadow-2xl border-2 sm:border-4 border-[#2b2b2e] touch-manipulation">
       {/* 8x8 Grid */}
-      <div className="grid grid-cols-8 grid-rows-8 w-full h-full">
+      <div className="grid grid-cols-8 grid-rows-8 w-full h-full touch-manipulation">
         {displayRanks.map((rank, rankIdx) =>
           displayFiles.map((file, fileIdx) => {
             const square = `${file}${rank}` as Square;
@@ -204,7 +204,7 @@ export const Chessboard: React.FC<ChessboardProps> = ({
                 onClick={() => handleSquareClick(square)}
                 onDragOver={handleDragOver}
                 onDrop={(e) => handleDrop(e, square)}
-                className={`relative flex items-center justify-center cursor-pointer transition-colors duration-150 ${baseColorClass}`}
+                className={`relative flex items-center justify-center cursor-pointer transition-colors duration-150 touch-manipulation select-none ${baseColorClass}`}
               >
                 {/* Last move highlight */}
                 {isLastMoveSquare && (
@@ -226,7 +226,7 @@ export const Chessboard: React.FC<ChessboardProps> = ({
                   <div
                     draggable={interactive && piece.color === chess.turn()}
                     onDragStart={(e) => handleDragStart(e, square)}
-                    className={`relative z-10 w-full h-full p-1.5 flex items-center justify-center transform active:scale-95 transition-transform ${
+                    className={`relative z-10 w-full h-full p-0.5 sm:p-1.5 flex items-center justify-center transform active:scale-95 transition-transform pointer-events-none ${
                       draggingSquare === square ? 'opacity-30' : 'opacity-100'
                     }`}
                   >
