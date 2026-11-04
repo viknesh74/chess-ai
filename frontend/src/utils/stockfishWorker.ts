@@ -114,13 +114,34 @@ class StockfishWorkerService {
     }
 
     return new Promise((resolve) => {
-      this.currentCallback = (bestMove, evalData) => {
+      let resolved = false;
+      const onDone = (bestMove: string, evalData: EngineEvaluation) => {
+        if (resolved) return;
+        resolved = true;
+        clearTimeout(stopTimer);
+        clearTimeout(fallbackTimer);
         resolve({ bestMove, evaluation: evalData });
       };
 
+      this.currentCallback = onDone;
+
+      // Force Stockfish to stop search after 750ms for instant, fluid gameplay
+      const stopTimer = setTimeout(() => {
+        try {
+          this.worker?.postMessage('stop');
+        } catch {
+          // ignore
+        }
+      }, 750);
+
+      // Fallback timer if worker hangs
+      const fallbackTimer = setTimeout(() => {
+        onDone('', { depth: 0, scoreCentipawns: 0 });
+      }, 1200);
+
       this.worker?.postMessage('stop');
       this.worker?.postMessage(`position fen ${fen}`);
-      this.worker?.postMessage(`go depth ${depth}`);
+      this.worker?.postMessage(`go depth ${Math.min(depth, 10)}`);
     });
   }
 

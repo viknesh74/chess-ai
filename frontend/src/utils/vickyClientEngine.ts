@@ -4,38 +4,62 @@ import { stockfishService } from './stockfishWorker';
 
 const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
+let backendOfflineDetected = false;
+
+function shouldAttemptBackend(): boolean {
+  if (backendOfflineDetected) return false;
+  if (typeof window === 'undefined') return true;
+
+  const isHttps = window.location.protocol === 'https:';
+  const isLocalHost =
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname === '[::1]';
+
+  // If on HTTPS (e.g. https://vicky-chess.web.app) and BACKEND_URL points to insecure local HTTP,
+  // skip immediately to avoid browser Mixed Content blocking and seconds of timeout lag.
+  if (isHttps && !isLocalHost && BACKEND_URL.startsWith('http://127.0.0.1')) {
+    return false;
+  }
+  return true;
+}
+
 export async function getVickyMove(
   fen: string,
   historyMoves: string[] = [],
   personalizationWeight: number = 0.65,
-  stockfishDepth: number = 14,
+  stockfishDepth: number = 10,
   difficulty: string = 'master'
 ): Promise<VickyDecision> {
-  // First, query the FastAPI backend with the High-Accuracy Master XGBoost Model
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2800);
+  // First, query the FastAPI backend if reachable (responds in < 30ms locally)
+  if (shouldAttemptBackend()) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 600);
 
-    const response = await fetch(`${BACKEND_URL}/api/vicky-move`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        fen,
-        personalizationWeight,
-        historyMoves,
-        difficulty,
-      }),
-      signal: controller.signal,
-    });
+      const response = await fetch(`${BACKEND_URL}/api/vicky-move`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fen,
+          personalizationWeight,
+          historyMoves,
+          difficulty,
+        }),
+        signal: controller.signal,
+      });
 
-    clearTimeout(timeoutId);
+      clearTimeout(timeoutId);
 
-    if (response.ok) {
-      const data: VickyDecision = await response.json();
-      return data;
+      if (response.ok) {
+        const data: VickyDecision = await response.json();
+        return data;
+      } else {
+        backendOfflineDetected = true;
+      }
+    } catch {
+      backendOfflineDetected = true;
     }
-  } catch (e) {
-    console.info('Backend API offline or timed out, executing Master-level client engine...', e);
   }
 
   // Client-Side Master Hybrid Engine (Trained on 192 High-Accuracy Games)
@@ -92,7 +116,7 @@ export async function getVickyMove(
   let stockfishBestMoveUci = '';
   let engineScore = 0;
   try {
-    const sfResult = await stockfishService.evaluatePosition(fen, Math.max(stockfishDepth, 12));
+    const sfResult = await stockfishService.evaluatePosition(fen, Math.min(stockfishDepth || 10, 10));
     stockfishBestMoveUci = sfResult.bestMove;
     engineScore = sfResult.evaluation.scoreCentipawns;
   } catch (err) {

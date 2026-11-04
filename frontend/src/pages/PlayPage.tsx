@@ -443,8 +443,8 @@ export const PlayPage: React.FC<PlayPageProps> = ({
   const triggerVickyTurn = async (currentChess: Chess, movesHistory: string[]) => {
     setIsVickyThinking(true);
 
-    // Natural human-like thinking delay (350ms to 750ms)
-    const delay = Math.floor(Math.random() * 350) + 400;
+    // Quick, natural human-like thinking delay (200ms to 400ms)
+    const delay = Math.floor(Math.random() * 200) + 200;
     await new Promise((resolve) => setTimeout(resolve, delay));
 
     try {
