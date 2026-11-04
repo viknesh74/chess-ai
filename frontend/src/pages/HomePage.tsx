@@ -44,10 +44,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onStartGame, onNavigate, cur
             Play Against <span className="text-[#81b64c]">VICKY</span>, Your Personalized AI Mirror
           </h1>
 
-          <p className="text-base sm:text-lg text-gray-300 leading-relaxed">
-            Welcome, <strong className="text-white font-bold">{playerName}</strong>. Vicky has studied Viknesh's exact historical
-            openings, tactical capturing drives, and pawn structures. It plays with high-accuracy master decisions, using
-            Stockfish 18 tactical pruning to challenge you at a competitive level.
+          <p className="text-base text-gray-300">
+            Welcome, <strong className="text-white font-bold">{playerName}</strong>. Challenge Vicky AI in real-time master chess matches.
           </p>
 
           <div className="flex flex-wrap items-center gap-4 pt-2">
