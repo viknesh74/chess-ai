@@ -1,0 +1,133 @@
+{
+  "status": "TRAINED",
+  "modelType": "XGBoost Classifier & Ranker (vicky_move_preference)",
+  "totalGamesDataset": 441,
+  "trainGamesCount": 352,
+  "valGamesCount": 89,
+  "trainPositionsSampled": 43687,
+  "valPositionsSampled": 77215,
+  "metrics": {
+    "validationAuc": 0.766,
+    "binaryAccuracy": 79.04,
+    "top1MoveRankAccuracy": 26.02,
+    "top3MoveRankAccuracy": 49.77,
+    "precision": 0.0983,
+    "recall": 0.5776
+  },
+  "featureImportances": [
+    {
+      "feature": "is_capture",
+      "importance": 0.4267
+    },
+    {
+      "feature": "is_extended_center",
+      "importance": 0.067
+    },
+    {
+      "feature": "gives_check",
+      "importance": 0.0534
+    },
+    {
+      "feature": "is_opening",
+      "importance": 0.0527
+    },
+    {
+      "feature": "is_king",
+      "importance": 0.0501
+    },
+    {
+      "feature": "is_dev_move",
+      "importance": 0.0418
+    },
+    {
+      "feature": "is_pawn",
+      "importance": 0.0312
+    },
+    {
+      "feature": "fullmove_num",
+      "importance": 0.0277
+    },
+    {
+      "feature": "is_center",
+      "importance": 0.0267
+    },
+    {
+      "feature": "rank_advance",
+      "importance": 0.0258
+    },
+    {
+      "feature": "is_knight",
+      "importance": 0.0246
+    },
+    {
+      "feature": "dist_to_friendly_king",
+      "importance": 0.0246
+    },
+    {
+      "feature": "piece_type",
+      "importance": 0.0244
+    },
+    {
+      "feature": "is_bishop",
+      "importance": 0.0221
+    },
+    {
+      "feature": "is_queen",
+      "importance": 0.022
+    },
+    {
+      "feature": "is_rook",
+      "importance": 0.0213
+    },
+    {
+      "feature": "is_castle",
+      "importance": 0.021
+    },
+    {
+      "feature": "is_endgame",
+      "importance": 0.0154
+    },
+    {
+      "feature": "material_balance",
+      "importance": 0.0083
+    },
+    {
+      "feature": "is_middlegame",
+      "importance": 0.0066
+    },
+    {
+      "feature": "is_promotion",
+      "importance": 0.0064
+    }
+  ],
+  "featureColumns": [
+    "piece_type",
+    "is_pawn",
+    "is_knight",
+    "is_bishop",
+    "is_rook",
+    "is_queen",
+    "is_king",
+    "is_capture",
+    "gives_check",
+    "is_castle",
+    "is_promotion",
+    "is_center",
+    "is_extended_center",
+    "is_dev_move",
+    "rank_advance",
+    "dist_to_friendly_king",
+    "fullmove_num",
+    "is_opening",
+    "is_middlegame",
+    "is_endgame",
+    "material_balance"
+  ],
+  "styleFindings": [
+    "High preference for solid pawn structures (e3/e4 first moves) and French defense pawn structures",
+    "Frequent central knight development before bishop deployment",
+    "Strong preference for kingside castling (over 85% of castled games)",
+    "Aggressive pursuit of checks and captures during tactical middlegames",
+    "Vicky AI improves upon Viknesh by filtering out premature queen moves and avoiding hanging undefended pieces"
+  ]
+}

@@ -1,0 +1,285 @@
+{
+  "totalGamesAnalyzed": 443,
+  "highAccuracyGamesCount": 192,
+  "highAccuracyPercentage": 43.3,
+  "avgHighAccuracyScore": 77.5,
+  "avgHighCentipawnLoss": 200.9,
+  "highAccuracyWins": 134,
+  "highAccuracyWinRate": 69.8,
+  "topHighAccuracyOpenings": [
+    {
+      "opening": "e4 e6",
+      "count": 59
+    },
+    {
+      "opening": "e3 e5",
+      "count": 54
+    },
+    {
+      "opening": "d4 e6",
+      "count": 18
+    },
+    {
+      "opening": "e3 d5",
+      "count": 15
+    },
+    {
+      "opening": "e3 e6",
+      "count": 9
+    },
+    {
+      "opening": "e4 d6",
+      "count": 4
+    },
+    {
+      "opening": "e3 Nf6",
+      "count": 3
+    },
+    {
+      "opening": "d4 d6",
+      "count": 3
+    }
+  ],
+  "highAccuracyGamesSample": [
+    {
+      "id": 191,
+      "date": "2025.08.25",
+      "white": "pogingnonchalance",
+      "black": "viknesh004",
+      "result": "1-0",
+      "accuracy": 92.1,
+      "cpl": 24.7,
+      "opening": "e4 d6",
+      "moveCount": 31,
+      "termination": "pogingnonchalance won by resignation"
+    },
+    {
+      "id": 334,
+      "date": "2025.09.11",
+      "white": "viknesh004",
+      "black": "Joker0725",
+      "result": "0-1",
+      "accuracy": 91.9,
+      "cpl": 23.4,
+      "opening": "e3 e5",
+      "moveCount": 110,
+      "termination": "Joker0725 won by checkmate"
+    },
+    {
+      "id": 144,
+      "date": "2025.08.13",
+      "white": "KMC_Chess_Am",
+      "black": "viknesh004",
+      "result": "0-1",
+      "accuracy": 90.1,
+      "cpl": 35.5,
+      "opening": "e4 e6",
+      "moveCount": 38,
+      "termination": "viknesh004 won by resignation"
+    },
+    {
+      "id": 105,
+      "date": "2025.08.09",
+      "white": "SwapnilD718",
+      "black": "viknesh004",
+      "result": "1-0",
+      "accuracy": 89.2,
+      "cpl": 34.1,
+      "opening": "e4 e6",
+      "moveCount": 45,
+      "termination": "SwapnilD718 won by checkmate"
+    },
+    {
+      "id": 175,
+      "date": "2025.08.18",
+      "white": "viknesh004",
+      "black": "Fab_Ani",
+      "result": "1-0",
+      "accuracy": 87.0,
+      "cpl": 43.6,
+      "opening": "e3 d5",
+      "moveCount": 115,
+      "termination": "viknesh004 won by resignation"
+    },
+    {
+      "id": 14,
+      "date": "2025.07.28",
+      "white": "Swarnadeep10",
+      "black": "viknesh004",
+      "result": "1-0",
+      "accuracy": 86.3,
+      "cpl": 45.1,
+      "opening": "e4 e6",
+      "moveCount": 95,
+      "termination": "Swarnadeep10 won by checkmate"
+    },
+    {
+      "id": 107,
+      "date": "2025.08.09",
+      "white": "viknesh004",
+      "black": "muunuud",
+      "result": "1/2-1/2",
+      "accuracy": 86.1,
+      "cpl": 49.9,
+      "opening": "e3 e5",
+      "moveCount": 94,
+      "termination": "Game drawn by stalemate"
+    },
+    {
+      "id": 209,
+      "date": "2025.08.26",
+      "white": "ABDULA24",
+      "black": "viknesh004",
+      "result": "0-1",
+      "accuracy": 86.1,
+      "cpl": 41.4,
+      "opening": "d4 e6",
+      "moveCount": 84,
+      "termination": "viknesh004 won - game abandoned"
+    },
+    {
+      "id": 80,
+      "date": "2025.08.07",
+      "white": "viknesh004",
+      "black": "kenanaaal",
+      "result": "1-0",
+      "accuracy": 85.8,
+      "cpl": 40.0,
+      "opening": "e3 e5",
+      "moveCount": 5,
+      "termination": "viknesh004 won by checkmate"
+    },
+    {
+      "id": 185,
+      "date": "2025.08.24",
+      "white": "vsmonster",
+      "black": "viknesh004",
+      "result": "0-1",
+      "accuracy": 85.8,
+      "cpl": 53.7,
+      "opening": "Nc3 e6",
+      "moveCount": 119,
+      "termination": "viknesh004 won by resignation"
+    },
+    {
+      "id": 369,
+      "date": "2025.10.01",
+      "white": "viknesh004",
+      "black": "njrips",
+      "result": "0-1",
+      "accuracy": 85.8,
+      "cpl": 45.0,
+      "opening": "e3 d5",
+      "moveCount": 130,
+      "termination": "njrips won by checkmate"
+    },
+    {
+      "id": 389,
+      "date": "2025.10.08",
+      "white": "MauroAndrea98",
+      "black": "viknesh004",
+      "result": "1-0",
+      "accuracy": 85.8,
+      "cpl": 47.4,
+      "opening": "e4 e6",
+      "moveCount": 93,
+      "termination": "MauroAndrea98 won by checkmate"
+    },
+    {
+      "id": 201,
+      "date": "2025.08.25",
+      "white": "pendekarsyairberdah",
+      "black": "viknesh004",
+      "result": "0-1",
+      "accuracy": 85.3,
+      "cpl": 41.7,
+      "opening": "e4 e5",
+      "moveCount": 6,
+      "termination": "viknesh004 won by resignation"
+    },
+    {
+      "id": 207,
+      "date": "2025.08.26",
+      "white": "viknesh004",
+      "black": "Indimaster",
+      "result": "1-0",
+      "accuracy": 85.0,
+      "cpl": 48.4,
+      "opening": "e3 Nf6",
+      "moveCount": 99,
+      "termination": "viknesh004 won by resignation"
+    },
+    {
+      "id": 234,
+      "date": "2025.08.30",
+      "white": "uuu7iuh",
+      "black": "viknesh004",
+      "result": "1-0",
+      "accuracy": 84.8,
+      "cpl": 66.1,
+      "opening": "e4 e6",
+      "moveCount": 105,
+      "termination": "uuu7iuh won by checkmate"
+    },
+    {
+      "id": 43,
+      "date": "2025.08.04",
+      "white": "tharun_130507",
+      "black": "viknesh004",
+      "result": "0-1",
+      "accuracy": 84.5,
+      "cpl": 52.3,
+      "opening": "e4 e6",
+      "moveCount": 84,
+      "termination": "viknesh004 won by checkmate"
+    },
+    {
+      "id": 154,
+      "date": "2025.08.16",
+      "white": "RAVICHANDRANLP",
+      "black": "viknesh004",
+      "result": "0-1",
+      "accuracy": 84.5,
+      "cpl": 54.0,
+      "opening": "e4 e6",
+      "moveCount": 40,
+      "termination": "viknesh004 won - game abandoned"
+    },
+    {
+      "id": 42,
+      "date": "2025.08.04",
+      "white": "tharun_130507",
+      "black": "viknesh004",
+      "result": "0-1",
+      "accuracy": 84.4,
+      "cpl": 51.0,
+      "opening": "e4 e6",
+      "moveCount": 116,
+      "termination": "viknesh004 won by checkmate"
+    },
+    {
+      "id": 51,
+      "date": "2025.08.05",
+      "white": "pavi029",
+      "black": "viknesh004",
+      "result": "0-1",
+      "accuracy": 84.4,
+      "cpl": 50.0,
+      "opening": "d4 e6",
+      "moveCount": 12,
+      "termination": "viknesh004 won by checkmate"
+    },
+    {
+      "id": 248,
+      "date": "2025.09.01",
+      "white": "Mampuswkwkwk1",
+      "black": "viknesh004",
+      "result": "0-1",
+      "accuracy": 84.4,
+      "cpl": 55.7,
+      "opening": "e4 e6",
+      "moveCount": 31,
+      "termination": "viknesh004 won by resignation"
+    }
+  ]
+}

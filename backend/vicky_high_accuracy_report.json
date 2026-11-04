@@ -1,0 +1,143 @@
+{
+  "status": "TRAINED",
+  "modelType": "XGBoost Master Move Ranker (High Accuracy Peak Viknesh)",
+  "highAccuracyGamesUsed": 192,
+  "totalGamesDataset": 441,
+  "trainGamesCount": 352,
+  "valGamesCount": 89,
+  "trainPositionsSampled": 37848,
+  "valPositionsSampled": 70213,
+  "metrics": {
+    "validationAuc": 0.7642,
+    "binaryAccuracy": 49.67,
+    "top1MoveRankAccuracy": 26.31,
+    "top3MoveRankAccuracy": 48.73,
+    "precision": 0.0549,
+    "recall": 0.8284
+  },
+  "featureImportances": [
+    {
+      "feature": "is_capture",
+      "importance": 0.342
+    },
+    {
+      "feature": "is_defended",
+      "importance": 0.1375
+    },
+    {
+      "feature": "is_queen",
+      "importance": 0.0541
+    },
+    {
+      "feature": "is_extended_center",
+      "importance": 0.045
+    },
+    {
+      "feature": "gives_check",
+      "importance": 0.0406
+    },
+    {
+      "feature": "is_pawn",
+      "importance": 0.0403
+    },
+    {
+      "feature": "is_opening",
+      "importance": 0.0298
+    },
+    {
+      "feature": "is_dev_move",
+      "importance": 0.0297
+    },
+    {
+      "feature": "is_castle",
+      "importance": 0.028
+    },
+    {
+      "feature": "is_knight",
+      "importance": 0.026
+    },
+    {
+      "feature": "rank_advance",
+      "importance": 0.0243
+    },
+    {
+      "feature": "dist_to_friendly_king",
+      "importance": 0.0242
+    },
+    {
+      "feature": "fullmove_num",
+      "importance": 0.0234
+    },
+    {
+      "feature": "piece_type",
+      "importance": 0.0231
+    },
+    {
+      "feature": "attacks_queen",
+      "importance": 0.0211
+    },
+    {
+      "feature": "is_rook",
+      "importance": 0.0209
+    },
+    {
+      "feature": "is_center",
+      "importance": 0.0195
+    },
+    {
+      "feature": "is_king",
+      "importance": 0.0188
+    },
+    {
+      "feature": "is_bishop",
+      "importance": 0.0174
+    },
+    {
+      "feature": "is_endgame",
+      "importance": 0.0128
+    },
+    {
+      "feature": "material_balance",
+      "importance": 0.012
+    },
+    {
+      "feature": "is_middlegame",
+      "importance": 0.0086
+    },
+    {
+      "feature": "is_promotion",
+      "importance": 0.001
+    }
+  ],
+  "featureColumns": [
+    "piece_type",
+    "is_pawn",
+    "is_knight",
+    "is_bishop",
+    "is_rook",
+    "is_queen",
+    "is_king",
+    "is_capture",
+    "gives_check",
+    "is_castle",
+    "is_promotion",
+    "is_center",
+    "is_extended_center",
+    "is_dev_move",
+    "rank_advance",
+    "dist_to_friendly_king",
+    "is_defended",
+    "attacks_queen",
+    "fullmove_num",
+    "is_opening",
+    "is_middlegame",
+    "is_endgame",
+    "material_balance"
+  ],
+  "tuningHighlights": [
+    "Trained specifically on Viknesh's 192 high-accuracy games (77.5% average accuracy)",
+    "Sample weight bonus (3.5x) applied to peak winning decisions",
+    "Incorporated destination square defense, queen attack pressure, and central dominance",
+    "Coupled with Stockfish 18 tactical master pruning for hard AI level play"
+  ]
+}
