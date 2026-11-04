@@ -41,8 +41,9 @@ export const PgnImportPage: React.FC = () => {
     const formData = new FormData();
     formData.append('file', file);
 
+    const apiHost = (import.meta as any).env?.VITE_API_URL || (import.meta as any).env?.DEV ? 'http://127.0.0.1:8000' : '';
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/import-pgn', {
+      const res = await fetch(`${apiHost}/api/import-pgn`, {
         method: 'POST',
         body: formData,
       });
@@ -68,8 +69,9 @@ export const PgnImportPage: React.FC = () => {
     setIsRetraining(true);
     setRetrainSuccess(false);
 
+    const apiHost = (import.meta as any).env?.VITE_API_URL || (import.meta as any).env?.DEV ? 'http://127.0.0.1:8000' : '';
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/retrain', {
+      const res = await fetch(`${apiHost}/api/retrain`, {
         method: 'POST',
       });
 

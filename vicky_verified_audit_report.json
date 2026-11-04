@@ -321,3 +321,4 @@
   ],
   "overallAuditVerdict": "PASSED WITH CORRECTIONS. Dataset integrity and 80/20 game-level splitting verified. Discrepancy between 192, 352, and 89 games resolved. Zero illegal moves generated across 506 test states. Piece-square table vertical orientation inversion corrected. Personalization weight zero bug in API corrected. The 2200 Elo label is debunked as unverified; empirical match tournament places Vicky AI at ~1700 ± 213 Elo against calibrated club-level baselines."
 }
+
