@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "vicky-chess",
     "public": "frontend/dist",
     "ignore": [
       "firebase.json",
@@ -34,3 +35,4 @@
     ]
   }
 }
+
