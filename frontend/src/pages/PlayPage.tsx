@@ -24,6 +24,7 @@ import { EvaluationBar } from '../components/EvaluationBar';
 import { MoveHistory } from '../components/MoveHistory';
 import { VickyThoughtCard } from '../components/VickyThoughtCard';
 import { getVickyMove } from '../utils/vickyClientEngine';
+import { stockfishService } from '../utils/stockfishWorker';
 import { sounds } from '../utils/sound';
 import { BoardTheme, GameSettings, VickyDecision, GameRecord, UserProfile } from '../types/chess';
 import { dbSaveMatch } from '../utils/dbApi';
@@ -99,6 +100,11 @@ export const PlayPage: React.FC<PlayPageProps> = ({
   // Player Color (default White)
   const [playerColor, setPlayerColor] = useState<'w' | 'b'>('w');
   const [mobilePanel, setMobilePanel] = useState<'mind' | 'moves'>('mind');
+
+  // Eagerly pre-warm Stockfish 18 Web Worker on page mount for instant, zero-blunder calculation
+  useEffect(() => {
+    stockfishService.init().catch(() => {});
+  }, []);
 
   // Load persistent game state per user (resets if new account has no game)
   useEffect(() => {

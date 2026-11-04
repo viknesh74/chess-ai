@@ -26,15 +26,16 @@ class StockfishWorkerService {
           return;
         }
 
-        // Try to instantiate Stockfish WASM worker from public/stockfish.js
+        // Instantiate Stockfish Web Worker from public/stockfish.js
         this.worker = new Worker('/stockfish.js');
 
         const timeout = setTimeout(() => {
           if (!this.isReady) {
-            console.warn('Stockfish Web Worker initialization timed out, using server/hybrid fallback.');
+            console.warn('Stockfish Web Worker initialization timed out, using zero-blunder client fallback.');
+            this.initPromise = null; // allow retry
             resolve(false);
           }
-        }, 3000);
+        }, 4000);
 
         this.worker.onmessage = (event) => {
           const line = typeof event.data === 'string' ? event.data : '';
@@ -53,12 +54,14 @@ class StockfishWorkerService {
         this.worker.onerror = (err) => {
           console.warn('Stockfish Worker error:', err);
           clearTimeout(timeout);
+          this.initPromise = null; // allow retry
           resolve(false);
         };
 
         this.worker.postMessage('uci');
       } catch (err) {
         console.warn('Could not launch Stockfish worker:', err);
+        this.initPromise = null;
         resolve(false);
       }
     });
@@ -124,13 +127,19 @@ class StockfishWorkerService {
 
       this.currentCallback = onDone;
 
-      // Reliable 1000ms safety timeout if Web Worker ever hangs
+      // 1500ms safety timeout buffer for mobile threads
       const fallbackTimer = setTimeout(() => {
         onDone('', { depth: 0, scoreCentipawns: 0 });
-      }, 1000);
+      }, 1500);
 
-      this.worker?.postMessage(`position fen ${fen}`);
-      this.worker?.postMessage(`go movetime 350`);
+      try {
+        this.worker?.postMessage('stop');
+        this.worker?.postMessage(`position fen ${fen}`);
+        this.worker?.postMessage(`go movetime 400`);
+      } catch (err) {
+        console.warn('Error posting to Stockfish worker:', err);
+        onDone('', { depth: 0, scoreCentipawns: 0 });
+      }
     });
   }
 
