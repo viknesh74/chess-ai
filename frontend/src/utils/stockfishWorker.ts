@@ -95,7 +95,7 @@ class StockfishWorkerService {
     if (line.startsWith('bestmove')) {
       const parts = line.split(' ');
       const bestMove = parts[1] || '';
-      if (this.currentCallback) {
+      if (bestMove && bestMove !== '(none)' && this.currentCallback) {
         const cb = this.currentCallback;
         this.currentCallback = null;
         cb(bestMove, { ...this.latestEval, bestMove });
@@ -106,7 +106,6 @@ class StockfishWorkerService {
   public async evaluatePosition(fen: string, depth: number = 10): Promise<{ bestMove: string; evaluation: EngineEvaluation }> {
     const ready = await this.init();
     if (!ready || !this.worker) {
-      // Fallback
       return {
         bestMove: '',
         evaluation: { depth: 0, scoreCentipawns: 0 }
@@ -118,30 +117,20 @@ class StockfishWorkerService {
       const onDone = (bestMove: string, evalData: EngineEvaluation) => {
         if (resolved) return;
         resolved = true;
-        clearTimeout(stopTimer);
         clearTimeout(fallbackTimer);
+        this.currentCallback = null;
         resolve({ bestMove, evaluation: evalData });
       };
 
       this.currentCallback = onDone;
 
-      // Force Stockfish to stop search after 750ms for instant, fluid gameplay
-      const stopTimer = setTimeout(() => {
-        try {
-          this.worker?.postMessage('stop');
-        } catch {
-          // ignore
-        }
-      }, 750);
-
-      // Fallback timer if worker hangs
+      // Reliable 1000ms safety timeout if Web Worker ever hangs
       const fallbackTimer = setTimeout(() => {
         onDone('', { depth: 0, scoreCentipawns: 0 });
-      }, 1200);
+      }, 1000);
 
-      this.worker?.postMessage('stop');
       this.worker?.postMessage(`position fen ${fen}`);
-      this.worker?.postMessage(`go depth ${Math.min(depth, 10)}`);
+      this.worker?.postMessage(`go movetime 350`);
     });
   }
 

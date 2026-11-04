@@ -123,52 +123,161 @@ export async function getVickyMove(
     console.warn('Stockfish evaluation fallback active:', err);
   }
 
-  // 3. Score candidate moves using High-Accuracy Peak Viknesh Features
-  const scoredMoves = legalMoves.map((move) => {
+  // 3. Piece Values & Tactical Material Guardian (Zero-Blunder Enforcement)
+  const PIECE_VALUES: Record<string, number> = {
+    p: 100,
+    n: 320,
+    b: 330,
+    r: 500,
+    q: 900,
+    k: 20000,
+  };
+
+  function evaluateMoveTacticalSafety(move: any): { tacticalScore: number; isBlunder: boolean } {
+    const testChess = new Chess(fen);
+    const res = testChess.move(move);
+    if (!res) return { tacticalScore: -99999, isBlunder: true };
+
+    if (testChess.isCheckmate()) {
+      return { tacticalScore: 99999, isBlunder: false };
+    }
+    if (testChess.isDraw() || testChess.isStalemate()) {
+      return { tacticalScore: 0, isBlunder: false };
+    }
+
+    const oppReplies = testChess.moves({ verbose: true });
+    if (oppReplies.length === 0) return { tacticalScore: 0, isBlunder: false };
+
+    let isBlunder = false;
+    let hangingPenalty = 0;
+
+    // Check 1: Can opponent capture the piece we just moved to move.to?
+    const capturesOnTarget = oppReplies.filter((m) => m.to === move.to);
+    if (capturesOnTarget.length > 0) {
+      const movedVal = PIECE_VALUES[move.piece] || 100;
+      const capturedVal = move.captured ? (PIECE_VALUES[move.captured] || 100) : 0;
+
+      // Smallest enemy attacker captures first (e.g. King, Bishop, or Pawn taking Queen)
+      capturesOnTarget.sort(
+        (a, b) => (PIECE_VALUES[a.piece] || 100) - (PIECE_VALUES[b.piece] || 100)
+      );
+      const primaryAttacker = capturesOnTarget[0];
+      const attackerVal = PIECE_VALUES[primaryAttacker.piece] || 100;
+
+      // Check if friendly pieces defend move.to
+      const oppBoard = new Chess(testChess.fen());
+      oppBoard.move(primaryAttacker);
+      const friendlyRecaptures = oppBoard.moves({ verbose: true }).filter((m) => m.to === move.to);
+
+      if (friendlyRecaptures.length === 0) {
+        // Piece is completely undefended and captured!
+        const netLoss = movedVal - capturedVal;
+        if (netLoss > 100) {
+          isBlunder = true;
+          hangingPenalty += netLoss * 10;
+        }
+      } else {
+        // Piece is defended, but traded down (e.g. Queen for defended pawn)
+        if (movedVal > attackerVal && movedVal > capturedVal) {
+          const tradeLoss = movedVal - Math.max(attackerVal, capturedVal);
+          if (tradeLoss > 150) {
+            isBlunder = true;
+            hangingPenalty += tradeLoss * 8;
+          }
+        }
+      }
+    }
+
+    // Check 2: Does this move leave an undefended Queen or Rook hanging to capture?
+    for (const oppMove of oppReplies) {
+      if (oppMove.captured && (oppMove.captured === 'q' || oppMove.captured === 'k')) {
+        const oppBoard = new Chess(testChess.fen());
+        oppBoard.move(oppMove);
+        const recap = oppBoard.moves({ verbose: true }).filter((m) => m.to === oppMove.to);
+        if (recap.length === 0) {
+          isBlunder = true;
+          hangingPenalty += 9000;
+        }
+      }
+    }
+
+    let baseScore = 0;
+    if (move.captured) {
+      baseScore += PIECE_VALUES[move.captured] || 100;
+    }
+    if (testChess.inCheck()) {
+      baseScore += 30;
+    }
+
+    return { tacticalScore: baseScore - hangingPenalty, isBlunder };
+  }
+
+  // 4. Score Candidate Moves with Hard Blunder Filter
+  const evaluatedMoves = legalMoves.map((move) => {
     const uci = `${move.from}${move.to}${move.promotion || ''}`;
+    const { tacticalScore, isBlunder } = evaluateMoveTacticalSafety(move);
+    return { move, uci, tacticalScore, isBlunder };
+  });
+
+  const bestTacticalScore = Math.max(...evaluatedMoves.map((m) => m.tacticalScore));
+
+  const scoredMoves = evaluatedMoves.map(({ move, uci, tacticalScore, isBlunder }) => {
+    const isEngineMatch = Boolean(
+      stockfishBestMoveUci &&
+      stockfishBestMoveUci.length >= 4 &&
+      stockfishBestMoveUci.startsWith(uci)
+    );
+
+    // A move is strictly sound if:
+    // (a) It matches Stockfish's top evaluated move, OR
+    // (b) It is NOT a blunder and within 50 centipawns of the best tactical move
+    const tacticalDiff = tacticalScore - bestTacticalScore;
+    const isTacticallySound = !isBlunder && (tacticalDiff >= -50 || bestTacticalScore < -1000);
+    const isSound = isEngineMatch || isTacticallySound;
+
     let styleScore = 0.5;
 
-    // Feature 1: Tactical Captures (42.7% feature importance in peak games)
-    if (move.captured) {
-      styleScore += 0.28;
+    // Apply Viknesh's signature attacking/tactical drive ONLY to sound moves!
+    if (isSound) {
+      if (move.captured) styleScore += 0.28;
+      if (move.san.includes('+')) styleScore += 0.18;
+      const centerSquares = ['d4', 'e4', 'd5', 'e5', 'c3', 'c6', 'f3', 'f6'];
+      if (centerSquares.includes(move.to)) styleScore += 0.15;
+      if (move.san === 'O-O') styleScore += 0.30;
+    } else {
+      styleScore = 0.01;
     }
 
-    // Feature 2: Checks & Pins
-    const testChess = new Chess(fen);
-    testChess.move(move);
-    if (testChess.inCheck()) {
-      styleScore += 0.20;
-    }
-
-    // Feature 3: Center & Extended Center Domination
-    const centerSquares = ['d4', 'e4', 'd5', 'e5', 'c3', 'c6', 'f3', 'f6'];
-    if (centerSquares.includes(move.to)) {
-      styleScore += 0.15;
-    }
-
-    // Feature 4: Rapid Kingside Castling (O-O)
-    if (move.san === 'O-O') {
-      styleScore += 0.30;
-    }
-
-    // Anti-blunder: Prune early queen excursions before move 5
+    // Prune premature Queen moves
     if (move.piece === 'q' && moveNumber <= 4) {
-      styleScore -= 0.40;
+      styleScore = 0.01;
     }
 
-    // Master AI Level: Strict Engine Match Bonus
-    const isEngineMatch = stockfishBestMoveUci.startsWith(uci);
-    const engineMatchBonus = isEngineMatch ? 1.0 : 0.65;
+    let engineScoreNorm = 0.1;
+    if (isEngineMatch) {
+      engineScoreNorm = 1.0;
+    } else if (isSound) {
+      engineScoreNorm = Math.max(0.4, 0.8 + tacticalDiff / 200);
+    } else {
+      engineScoreNorm = 0.0;
+    }
 
-    // Combine with configurable personalization weight
-    const combined = (1 - personalizationWeight) * engineMatchBonus + personalizationWeight * styleScore;
+    // Blunders receive a near-zero score (0.0001) ensuring they are NEVER selected
+    let combined = isSound
+      ? (1 - personalizationWeight) * engineScoreNorm + personalizationWeight * styleScore
+      : 0.0001;
+
+    if (isEngineMatch) {
+      combined += 0.35; // Priority bonus for Stockfish's best move
+    }
 
     return {
       san: move.san,
       uci,
-      styleScore: Math.min(1.0, Math.max(0.0, styleScore)),
-      engineEval: isEngineMatch ? engineScore : engineScore - 25,
-      combinedScore: combined,
+      styleScore: Number(Math.min(1.0, Math.max(0.0, styleScore)).toFixed(3)),
+      engineEval: isEngineMatch ? engineScore : tacticalScore,
+      combinedScore: Number(combined.toFixed(4)),
+      isSound,
     };
   });
 
