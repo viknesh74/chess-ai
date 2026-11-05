@@ -2,7 +2,7 @@ import { Chess } from 'chess.js';
 import { VickyDecision } from '../types/chess';
 import { stockfishService } from './stockfishWorker';
 
-const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+const BACKEND_URL = import.meta.env.VITE_API_URL || 'https://chess-ai-vud6.onrender.com';
 
 let backendOfflineDetected = false;
 

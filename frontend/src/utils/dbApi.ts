@@ -3,7 +3,8 @@
 
 import { UserProfile, GameRecord } from '../types/chess';
 
-const API_BASE = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000') + '/api/db';
+const RENDER_PROD_URL = 'https://chess-ai-vud6.onrender.com';
+const API_BASE = (import.meta.env.VITE_API_URL || RENDER_PROD_URL) + '/api/db';
 
 /**
  * Register a new user in SQLite DB

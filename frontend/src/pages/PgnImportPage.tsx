@@ -41,7 +41,7 @@ export const PgnImportPage: React.FC = () => {
     const formData = new FormData();
     formData.append('file', file);
 
-    const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+    const API_BASE = import.meta.env.VITE_API_URL || 'https://chess-ai-vud6.onrender.com';
 
     try {
       const res = await fetch(`${API_BASE}/api/import-pgn`, {
@@ -70,7 +70,7 @@ export const PgnImportPage: React.FC = () => {
     setIsRetraining(true);
     setRetrainSuccess(false);
 
-    const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+    const API_BASE = import.meta.env.VITE_API_URL || 'https://chess-ai-vud6.onrender.com';
 
     try {
       const res = await fetch(`${API_BASE}/api/retrain`, {
