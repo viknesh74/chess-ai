@@ -1,24 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   User,
-  Shield,
-  Zap,
-  Award,
-  Crown,
   CheckCircle,
   ArrowRight,
   Flame,
-  Gamepad2,
   Sparkles,
-  Users,
   LayoutDashboard,
   LogIn,
   UserPlus,
-  Search,
+  Trophy,
 } from 'lucide-react';
 import { UserProfile } from '../types/chess';
 import { sounds } from '../utils/sound';
-import { dbRegisterUser, dbLoginUser, dbGetAllUsers } from '../utils/dbApi';
+import { dbRegisterUser, dbLoginUser } from '../utils/dbApi';
 import { getValidAvatar } from '../utils/avatar';
 
 interface LoginPageProps {
@@ -26,9 +20,10 @@ interface LoginPageProps {
   onLogin: (user: UserProfile) => void;
   onEnterDashboard: (user: UserProfile) => void;
   onPlay: (user: UserProfile) => void;
+  onViewLeaderboard?: () => void;
 }
 
-const ALL_PLAYERS_STORAGE_KEY = 'vicky_chess_all_players_v1';
+const USER_PROFILE_KEY = 'vicky_chess_player_v1';
 
 const AVATAR_OPTIONS = [
   { emoji: '🦁', label: 'Lion', desc: 'Aggressive Attacker' },
@@ -53,32 +48,29 @@ export const LoginPage: React.FC<LoginPageProps> = ({
   onLogin,
   onEnterDashboard,
   onPlay,
+  onViewLeaderboard,
 }) => {
-  // Saved players registry
-  const [savedPlayers, setSavedPlayers] = useState<UserProfile[]>(() => {
+  // Local profile strictly for THIS browser/device
+  const [deviceSavedProfile, setDeviceSavedProfile] = useState<UserProfile | null>(() => {
     try {
-      const saved = localStorage.getItem(ALL_PLAYERS_STORAGE_KEY);
+      const saved = localStorage.getItem(USER_PROFILE_KEY);
       if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          return parsed.filter((p) => p && p.name && p.registeredAt !== 'Original Dataset');
-        }
+        const parsed: UserProfile = JSON.parse(saved);
+        if (parsed && parsed.username) return parsed;
       }
     } catch {
       // ignore
     }
-    return [];
+    return null;
   });
 
-  // Default tab: if user has saved profiles, show 'signin', otherwise 'register'
+  // Default tab: if user has a profile saved on this device, show signin, else register
   const [activeTab, setActiveTab] = useState<'register' | 'signin'>(() => {
     try {
-      const saved = localStorage.getItem(ALL_PLAYERS_STORAGE_KEY);
+      const saved = localStorage.getItem(USER_PROFILE_KEY);
       if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.filter((p) => p && p.name && p.registeredAt !== 'Original Dataset').length > 0) {
-          return 'signin';
-        }
+        const parsed: UserProfile = JSON.parse(saved);
+        if (parsed && parsed.username) return 'signin';
       }
     } catch {
       // ignore
@@ -93,60 +85,31 @@ export const LoginPage: React.FC<LoginPageProps> = ({
   const [selectedAvatar, setSelectedAvatar] = useState('🦁');
   const [selectedSkill, setSelectedSkill] = useState('Intermediate');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Sign in form state
   const [signInNameInput, setSignInNameInput] = useState('');
   const [signInError, setSignInError] = useState<string | null>(null);
-  const [registrationNotice, setRegistrationNotice] = useState<string | null>(null);
-
-  // Sync with SQLite Database on Mount
-  useEffect(() => {
-    dbGetAllUsers().then((dbUsers) => {
-      if (dbUsers && dbUsers.length > 0) {
-        setSavedPlayers((prev) => {
-          const map = new Map<string, UserProfile>();
-          for (const u of [...prev, ...dbUsers]) {
-            if (u && u.username) {
-              const sanitized = {
-                ...u,
-                avatar: getValidAvatar(u.avatar),
-              };
-              map.set(u.username.toLowerCase(), sanitized);
-            }
-          }
-          const merged = Array.from(map.values());
-          localStorage.setItem(ALL_PLAYERS_STORAGE_KEY, JSON.stringify(merged));
-          return merged;
-        });
-      }
-    });
-  }, []);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const handleSkillSelect = (skill: (typeof SKILL_LEVELS)[0]) => {
     setSelectedSkill(skill.level);
     setRating(skill.elo);
   };
 
-  const validateAndCreateUser = (): UserProfile | null => {
+  // Register and proceed directly to Game & Dashboard
+  const handleRegisterProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
     const trimmedName = name.trim();
     if (!trimmedName || trimmedName.length < 2) {
       setErrorMessage('Please enter your name (at least 2 characters).');
-      return null;
+      return;
     }
 
-    const trimmedUsername = (username.trim() || trimmedName.toLowerCase().replace(/\s+/g, '_')).trim();
+    const trimmedUsername = (username.trim() || trimmedName.toLowerCase().replace(/\s+/g, '_')).trim().toLowerCase();
 
-    // Load latest players from localStorage
-    let currentPlayers: UserProfile[] = savedPlayers;
-    try {
-      const saved = localStorage.getItem(ALL_PLAYERS_STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) currentPlayers = parsed;
-      }
-    } catch {
-      // ignore
-    }
+    setIsSubmitting(true);
+    setErrorMessage(null);
 
     const newUser: UserProfile = {
       name: trimmedName,
@@ -161,45 +124,36 @@ export const LoginPage: React.FC<LoginPageProps> = ({
       }),
     };
 
-    // Filter out duplicate username/name and prepend the new user
-    const updatedPlayers = [
-      newUser,
-      ...currentPlayers.filter(
-        (p) =>
-          p.username.toLowerCase().trim() !== trimmedUsername.toLowerCase() &&
-          p.name.toLowerCase().trim() !== trimmedName.toLowerCase()
-      ),
-    ];
-    setSavedPlayers(updatedPlayers);
-    localStorage.setItem(ALL_PLAYERS_STORAGE_KEY, JSON.stringify(updatedPlayers));
-    // Persist to SQLite Database
-    dbRegisterUser({
-      name: newUser.name,
-      username: newUser.username,
-      rating: newUser.rating,
-      avatar: newUser.avatar,
-      title: newUser.title,
-    }).catch((err) => console.warn('Could not sync user to DB:', err));
-    return newUser;
-  };
+    try {
+      // Save locally to this specific device
+      localStorage.setItem(USER_PROFILE_KEY, JSON.stringify(newUser));
+      setDeviceSavedProfile(newUser);
 
-  // Register and proceed to Sign In step
-  const handleRegisterProfile = (e: React.FormEvent) => {
-    e.preventDefault();
-    const user = validateAndCreateUser();
-    if (user) {
+      // Register in MongoDB Atlas cloud database
+      const dbResult = await dbRegisterUser({
+        name: newUser.name,
+        username: newUser.username,
+        rating: newUser.rating,
+        avatar: newUser.avatar,
+        title: newUser.title,
+      });
+
+      const finalUser = dbResult || newUser;
       sounds.playMove();
-      setName('');
-      setUsername('');
-      setErrorMessage(null);
-      setRegistrationNotice(`✓ Profile created for ${user.name}! Please enter your username "${user.username}" below to sign in.`);
-      setSignInNameInput(user.username);
-      setSignInError(null);
-      setActiveTab('signin');
+      onLogin(finalUser);
+      onEnterDashboard(finalUser);
+    } catch (err: any) {
+      console.warn('Registration notice:', err);
+      // Even if network has a glitch, log in locally with this account
+      sounds.playMove();
+      onLogin(newUser);
+      onEnterDashboard(newUser);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  // Sign in by verifying correct username
+  // Sign in by verifying correct username in MongoDB Atlas
   const handleSignInByUsername = async (e: React.FormEvent) => {
     e.preventDefault();
     const query = signInNameInput.trim().toLowerCase();
@@ -208,43 +162,27 @@ export const LoginPage: React.FC<LoginPageProps> = ({
       return;
     }
 
-    // Always check both state and latest localStorage
-    let players: UserProfile[] = savedPlayers;
+    setIsLoggingIn(true);
+    setSignInError(null);
+
     try {
-      const saved = localStorage.getItem(ALL_PLAYERS_STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          players = parsed;
-        }
+      // Check MongoDB cloud backend
+      const matched = await dbLoginUser(query);
+
+      if (matched) {
+        sounds.playMove();
+        // Save as current device profile
+        localStorage.setItem(USER_PROFILE_KEY, JSON.stringify(matched));
+        setDeviceSavedProfile(matched);
+        onLogin(matched);
+        onEnterDashboard(matched);
+      } else {
+        setSignInError(`Account not found for username "${signInNameInput.trim()}". Please enter your registered username or create a new profile.`);
       }
-    } catch {
-      // ignore
-    }
-
-    let matched = players.find(
-      (p) =>
-        (p.username && p.username.toLowerCase().trim() === query) ||
-        (p.name && p.name.toLowerCase().trim() === query)
-    );
-
-    // If not found in cache, check SQLite DB
-    if (!matched) {
-      const dbUser = await dbLoginUser(query);
-      if (dbUser) {
-        matched = dbUser;
-        setSavedPlayers((prev) => [dbUser, ...prev.filter(p => p.username.toLowerCase() !== dbUser.username.toLowerCase())]);
-      }
-    }
-
-    if (matched) {
-      sounds.playMove();
-      setSignInError(null);
-      setRegistrationNotice(null);
-      onLogin(matched);
-      onEnterDashboard(matched);
-    } else {
-      setSignInError(`Incorrect username! No registered account found matching "${signInNameInput.trim()}". Please enter your correct username.`);
+    } catch (err) {
+      setSignInError('Unable to connect to database. Please check your internet connection.');
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -257,11 +195,25 @@ export const LoginPage: React.FC<LoginPageProps> = ({
           <span>VICKY AI CHESS CHALLENGER PORTAL</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-          Create Profile & Play With <span className="text-[#81b64c]">VICKY AI</span>
+          Play Chess With <span className="text-[#81b64c]">VICKY AI</span>
         </h1>
         <p className="text-sm text-gray-400 max-w-xl mx-auto leading-relaxed">
-          Create your personalized chess profile with your name and avatar, then sign in to access your dashboard and challenge Vicky AI in 10+0 Rapid chess.
+          Create your personalized account to challenge Vicky Master AI, record your matches in real-time, and climb the official global leaderboard.
         </p>
+
+        {onViewLeaderboard && (
+          <div className="pt-1">
+            <button
+              type="button"
+              onClick={onViewLeaderboard}
+              className="inline-flex items-center space-x-2 px-4 py-2 rounded-xl bg-[#202026] hover:bg-[#2b2b34] text-amber-300 border border-amber-500/30 text-xs font-bold transition-all shadow-md hover:scale-105 cursor-pointer"
+            >
+              <Trophy className="w-3.5 h-3.5 text-amber-400" />
+              <span>View Official Leaderboard Standings</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* If a profile is currently active */}
@@ -293,14 +245,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({
           <div className="flex items-center space-x-2">
             <button
               onClick={() => onEnterDashboard(currentUser)}
-              className="flex items-center space-x-2 px-5 py-3 rounded-xl bg-[#81b64c] hover:bg-[#95c65d] text-white font-extrabold text-xs shadow-lg shadow-green-950/40 transition-transform transform hover:scale-105 active:scale-95"
+              className="flex items-center space-x-2 px-5 py-3 rounded-xl bg-[#81b64c] hover:bg-[#95c65d] text-white font-extrabold text-xs shadow-lg shadow-green-950/40 transition-transform transform hover:scale-105 active:scale-95 cursor-pointer"
             >
               <LayoutDashboard className="w-4 h-4" />
               <span>Go to Dashboard</span>
             </button>
             <button
               onClick={() => onPlay(currentUser)}
-              className="flex items-center space-x-2 px-4 py-3 rounded-xl bg-[#27272a] hover:bg-[#333] border border-[#3e3e44] text-white font-bold text-xs transition-colors"
+              className="flex items-center space-x-2 px-4 py-3 rounded-xl bg-[#27272a] hover:bg-[#333] border border-[#3e3e44] text-white font-bold text-xs transition-colors cursor-pointer"
             >
               <Flame className="w-4 h-4 text-emerald-400" />
               <span>Play Vicky</span>
@@ -316,14 +268,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({
             setActiveTab('register');
             setErrorMessage(null);
           }}
-          className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+          className={`flex items-center space-x-2 px-6 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeTab === 'register'
               ? 'bg-[#81b64c] text-white shadow-md'
               : 'text-gray-400 hover:text-white hover:bg-[#222226]'
           }`}
         >
           <UserPlus className="w-4 h-4" />
-          <span>1. Create New Profile</span>
+          <span>Create New Profile</span>
         </button>
 
         <button
@@ -331,14 +283,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({
             setActiveTab('signin');
             setSignInError(null);
           }}
-          className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+          className={`flex items-center space-x-2 px-6 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeTab === 'signin'
               ? 'bg-[#81b64c] text-white shadow-md'
               : 'text-gray-400 hover:text-white hover:bg-[#222226]'
           }`}
         >
           <LogIn className="w-4 h-4" />
-          <span>2. Sign In With Username {savedPlayers.length > 0 && `(${savedPlayers.length})`}</span>
+          <span>Sign In</span>
         </button>
       </div>
 
@@ -351,10 +303,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({
           <div className="border-b border-[#2d2d34] pb-4">
             <h3 className="text-lg font-black text-white flex items-center space-x-2">
               <UserPlus className="w-5 h-5 text-[#81b64c]" />
-              <span>Create Your Challenger Profile</span>
+              <span>Register Your Account</span>
             </h3>
             <p className="text-xs text-gray-400 mt-1">
-              Register your name and username. After registering, you will sign in with your username to enter the dashboard.
+              Create your personal profile. Your stats and matches will be securely linked to your unique username.
             </p>
           </div>
 
@@ -389,7 +341,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
 
             <div className="space-y-2">
               <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider">
-                Username (Used to Sign In) *
+                Username (Unique Account ID) *
               </label>
               <input
                 type="text"
@@ -399,7 +351,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                 className="w-full px-4 py-3 rounded-xl bg-[#26262c] border border-[#3b3b44] text-white placeholder-gray-500 text-sm focus:outline-none focus:border-[#81b64c] transition-colors"
               />
               <span className="text-[11px] text-gray-500 block">
-                Required for sign-in. Auto-generated from name if left empty.
+                Used to log into your account. Auto-generated from name if blank.
               </span>
             </div>
           </div>
@@ -415,7 +367,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                   key={av.emoji}
                   type="button"
                   onClick={() => setSelectedAvatar(av.emoji)}
-                  className={`p-3 rounded-2xl border text-center transition-all flex flex-col items-center space-y-1 ${
+                  className={`p-3 rounded-2xl border text-center transition-all flex flex-col items-center space-y-1 cursor-pointer ${
                     selectedAvatar === av.emoji
                       ? 'bg-[#81b64c]/20 border-[#81b64c] shadow-lg scale-105'
                       : 'bg-[#25252b] border-[#36363e] hover:border-gray-500'
@@ -465,10 +417,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({
           <div className="pt-2">
             <button
               type="submit"
-              className="w-full py-4 rounded-2xl bg-[#81b64c] hover:bg-[#95c65d] text-white font-black text-sm uppercase tracking-wider shadow-xl shadow-green-950/40 transition-all transform hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center space-x-2 cursor-pointer"
+              disabled={isSubmitting}
+              className="w-full py-4 rounded-2xl bg-[#81b64c] hover:bg-[#95c65d] text-white font-black text-sm uppercase tracking-wider shadow-xl shadow-green-950/40 transition-all transform hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-60"
             >
               <UserPlus className="w-5 h-5" />
-              <span>Register Profile & Proceed to Sign In</span>
+              <span>{isSubmitting ? 'Creating Account...' : 'Register Profile & Start Playing'}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -481,17 +434,48 @@ export const LoginPage: React.FC<LoginPageProps> = ({
           <div className="border-b border-[#2d2d34] pb-4">
             <h3 className="text-lg font-black text-white flex items-center space-x-2">
               <LogIn className="w-5 h-5 text-[#81b64c]" />
-              <span>Sign In With Your Username</span>
+              <span>Sign In to Your Account</span>
             </h3>
             <p className="text-xs text-gray-400 mt-1">
-              Enter your correct registered username below to sign in and enter your dashboard.
+              Enter your registered username below to access your personal dashboard and games.
             </p>
           </div>
 
-          {registrationNotice && (
-            <div className="p-4 rounded-2xl bg-emerald-950/60 border border-emerald-500/50 text-emerald-300 text-xs font-semibold flex items-center space-x-2.5 animate-fade-in shadow-lg">
-              <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0" />
-              <span>{registrationNotice}</span>
+          {/* Remembered Account on THIS device */}
+          {deviceSavedProfile && (
+            <div className="p-4 rounded-2xl bg-[#232329] border border-[#353540] flex items-center justify-between gap-4">
+              <div className="flex items-center space-x-3.5">
+                <div className="w-12 h-12 rounded-xl bg-[#2c2c34] border border-[#3e3e48] flex items-center justify-center text-2xl">
+                  {getValidAvatar(deviceSavedProfile.avatar)}
+                </div>
+                <div>
+                  <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                    Profile On This Device
+                  </div>
+                  <div className="text-sm font-black text-white">
+                    {deviceSavedProfile.name}{' '}
+                    <span className="text-emerald-400 font-mono text-xs">
+                      (@{deviceSavedProfile.username})
+                    </span>
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    {deviceSavedProfile.rating} Elo • {deviceSavedProfile.title || 'Challenger'}
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  sounds.playMove();
+                  onLogin(deviceSavedProfile);
+                  onEnterDashboard(deviceSavedProfile);
+                }}
+                className="px-5 py-2.5 rounded-xl bg-[#81b64c] hover:bg-[#95c65d] text-white font-extrabold text-xs shadow-md transition-transform transform active:scale-95 flex items-center space-x-1.5 cursor-pointer shrink-0"
+              >
+                <span>Continue</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
             </div>
           )}
 
@@ -505,7 +489,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
           <form onSubmit={handleSignInByUsername} className="space-y-4">
             <div className="space-y-2">
               <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider">
-                Registered Username *
+                Enter Your Username *
               </label>
               <div className="relative">
                 <User className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
@@ -516,94 +500,42 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                     setSignInNameInput(e.target.value);
                     setSignInError(null);
                   }}
-                  placeholder="Enter your registered username (e.g. alex_chess)..."
+                  placeholder="e.g. alex_chess, nv14, or your username..."
                   className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-[#26262c] border border-[#3b3b44] text-white placeholder-gray-500 text-sm focus:outline-none focus:border-[#81b64c] transition-colors"
                   autoFocus
                   required
                 />
               </div>
               <span className="text-[11px] text-gray-500 block">
-                You must enter the exact registered username to sign in.
+                Accounts are private. Enter your own registered username to sign in.
               </span>
             </div>
 
             <button
               type="submit"
-              className="w-full py-4 rounded-xl bg-[#81b64c] hover:bg-[#95c65d] text-white font-extrabold text-sm uppercase tracking-wider shadow-lg shadow-green-950/30 transition-transform transform active:scale-95 flex items-center justify-center space-x-2 cursor-pointer"
+              disabled={isLoggingIn}
+              className="w-full py-4 rounded-xl bg-[#81b64c] hover:bg-[#95c65d] text-white font-extrabold text-sm uppercase tracking-wider shadow-lg shadow-green-950/30 transition-transform transform active:scale-95 flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-60"
             >
               <LogIn className="w-4 h-4" />
-              <span>Sign In to Dashboard</span>
+              <span>{isLoggingIn ? 'Verifying Account...' : 'Sign In to Dashboard'}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
 
-          {/* List of Registered Accounts on this device */}
-          <div className="space-y-3 pt-2 border-t border-[#2d2d34]">
-            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-              {savedPlayers.length > 0 ? 'Registered Accounts on this Device:' : 'No Registered Profiles:'}
-            </h4>
-
-            {savedPlayers.length === 0 ? (
-              <div className="p-8 rounded-2xl bg-[#24242a] border border-[#34343e] text-center space-y-3">
-                <div className="w-12 h-12 rounded-2xl bg-[#2c2c34] text-gray-400 mx-auto flex items-center justify-center text-2xl">
-                  👤
-                </div>
-                <h4 className="text-sm font-bold text-white">No Profiles Registered Yet</h4>
-                <p className="text-xs text-gray-400 max-w-sm mx-auto">
-                  You haven't registered any profiles on this device yet. Click below to register your profile!
-                </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveTab('register');
-                    setRegistrationNotice(null);
-                  }}
-                  className="px-5 py-2.5 rounded-xl bg-[#81b64c] hover:bg-[#95c65d] text-white font-bold text-xs transition-colors inline-flex items-center space-x-1.5 cursor-pointer"
-                >
-                  <UserPlus className="w-3.5 h-3.5" />
-                  <span>Create Your Profile Now</span>
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {savedPlayers.map((player) => (
-                  <div
-                    key={player.username}
-                    onClick={() => {
-                      setSignInNameInput(player.username);
-                      setSignInError(null);
-                    }}
-                    className="p-3.5 rounded-2xl bg-[#24242a] border border-[#34343e] hover:border-[#81b64c]/70 hover:bg-[#2b2b32] cursor-pointer transition-all flex items-center justify-between group shadow-sm"
-                    title={`Click to fill username "${player.username}" into sign in`}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-xl bg-[#2d2d34] border border-[#3e3e48] flex items-center justify-center text-xl group-hover:scale-105 transition-transform">
-                        {getValidAvatar(player.avatar)}
-                      </div>
-                      <div>
-                        <div className="flex items-center space-x-1.5">
-                          <span className="font-extrabold text-sm text-white group-hover:text-[#81b64c] transition-colors">
-                            {player.name}
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-1.5 text-[11px] text-gray-400">
-                          <span className="font-mono text-emerald-400 font-bold">
-                            @{player.username}
-                          </span>
-                          <span>•</span>
-                          <span>{player.rating} Elo</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-1 text-xs text-gray-400 group-hover:text-emerald-400 font-semibold">
-                      <span>Use</span>
-                      <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+          <div className="text-center pt-2">
+            <span className="text-xs text-gray-400">
+              Don't have an account yet?{' '}
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('register');
+                  setSignInError(null);
+                }}
+                className="text-[#81b64c] hover:underline font-bold"
+              >
+                Create a Profile
+              </button>
+            </span>
           </div>
         </div>
       )}

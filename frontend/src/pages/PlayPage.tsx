@@ -267,9 +267,12 @@ export const PlayPage: React.FC<PlayPageProps> = ({
       const matchHistoryStr = localStorage.getItem('vicky_live_match_history');
       const existing: GameRecord[] = matchHistoryStr ? JSON.parse(matchHistoryStr) : [];
       
+      const activeUsername = currentUser?.username || (currentUser?.name ? currentUser.name.toLowerCase().replace(/\s+/g, '_') : playerName.toLowerCase().replace(/\s+/g, '_'));
+      const displayName = currentUser?.name || playerName;
+
       const newRecord: GameRecord = {
         id: `match_${Date.now()}`,
-        userName: currentUser?.name || playerName,
+        userName: activeUsername,
         date: new Date().toLocaleDateString('en-US', {
           year: 'numeric',
           month: 'short',
@@ -277,10 +280,10 @@ export const PlayPage: React.FC<PlayPageProps> = ({
           hour: '2-digit',
           minute: '2-digit',
         }),
-        white: playerColor === 'w' ? `${playerName} (You)` : 'VICKY AI (Master)',
-        black: playerColor === 'b' ? `${playerName} (You)` : 'VICKY AI (Master)',
-        whiteElo: playerColor === 'w' ? String(currentUser?.rating || 'User') : '2200',
-        blackElo: playerColor === 'b' ? String(currentUser?.rating || 'User') : '2200',
+        white: playerColor === 'w' ? `${displayName} (You)` : 'VICKY AI (Master)',
+        black: playerColor === 'b' ? `${displayName} (You)` : 'VICKY AI (Master)',
+        whiteElo: playerColor === 'w' ? String(currentUser?.rating || '1200') : '2200',
+        blackElo: playerColor === 'b' ? String(currentUser?.rating || '1200') : '2200',
         result: outcome === 'win' ? '1-0' : outcome === 'loss' ? '0-1' : '1/2-1/2',
         outcome,
         userColor: playerColor === 'w' ? 'white' : 'black',

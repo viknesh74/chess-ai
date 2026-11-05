@@ -26,10 +26,8 @@ export async function dbRegisterUser(profile: {
   };
 
   try {
-    const raw = localStorage.getItem('vicky_chess_all_players_v1');
-    const existing: UserProfile[] = raw ? JSON.parse(raw) : [];
-    const filtered = existing.filter(p => p.username.toLowerCase() !== localProfile.username.toLowerCase());
-    localStorage.setItem('vicky_chess_all_players_v1', JSON.stringify([localProfile, ...filtered]));
+    localStorage.setItem('vicky_chess_player_v1', JSON.stringify(localProfile));
+    localStorage.setItem('vicky_current_user', JSON.stringify(localProfile));
   } catch {
     // ignore
   }
@@ -42,7 +40,14 @@ export async function dbRegisterUser(profile: {
     });
     if (res.ok) {
       const data = await res.json();
-      return data.user as UserProfile;
+      const registered = data.user as UserProfile;
+      try {
+        localStorage.setItem('vicky_chess_player_v1', JSON.stringify(registered));
+        localStorage.setItem('vicky_current_user', JSON.stringify(registered));
+      } catch {
+        // ignore
+      }
+      return registered;
     }
   } catch (err) {
     console.warn('Backend DB offline, operating locally:', err);
@@ -69,30 +74,20 @@ export async function dbLoginUser(username: string): Promise<UserProfile | null>
     // Backend offline, fallback to local
   }
 
-  // Fallback to local profiles
+  // Fallback to local profile saved on this specific device
   try {
-    const raw = localStorage.getItem('vicky_chess_all_players_v1');
+    const raw = localStorage.getItem('vicky_chess_player_v1');
     if (raw) {
-      const existing: UserProfile[] = JSON.parse(raw);
-      const found = existing.find(p => p.username.toLowerCase() === normUser || p.name.toLowerCase() === normUser);
-      if (found) return found;
-    }
-    const curRaw = localStorage.getItem('vicky_current_user');
-    if (curRaw) {
-      const cur: UserProfile = JSON.parse(curRaw);
-      if (cur && (cur.username.toLowerCase() === normUser || cur.name.toLowerCase() === normUser)) {
+      const cur: UserProfile = JSON.parse(raw);
+      if (cur && (cur.username?.toLowerCase() === normUser || cur.name?.toLowerCase() === normUser)) {
         return cur;
       }
     }
-    if (normUser === 'ned04') {
-      return {
-        name: 'Ned04',
-        username: 'ned04',
-        rating: 1500,
-        avatar: '🦁',
-        title: 'Challenger',
-        registeredAt: new Date().toISOString(),
-      };
+    const legacy = localStorage.getItem('vicky_chess_all_players_v1');
+    if (legacy) {
+      const existing: UserProfile[] = JSON.parse(legacy);
+      const found = existing.find(p => p.username?.toLowerCase() === normUser || p.name?.toLowerCase() === normUser);
+      if (found) return found;
     }
   } catch {
     // ignore
@@ -208,23 +203,7 @@ export interface LeaderboardEntry {
   createdAt?: number;
 }
 
-const DEFAULT_CHAMPIONS: LeaderboardEntry[] = [
-  {
-    rank: 1,
-    username: 'ned04',
-    name: 'Ned04',
-    rating: 1500,
-    avatar: '🦁',
-    title: 'Challenger',
-    totalMatches: 3,
-    wins: 1,
-    losses: 2,
-    draws: 0,
-    winRate: 33.3,
-    form: ['L', 'L', 'W'],
-    createdAt: 1793785550,
-  },
-];
+const DEFAULT_CHAMPIONS: LeaderboardEntry[] = [];
 
 /**
  * Computes live reactive leaderboard from local storage records & champions
@@ -232,68 +211,28 @@ const DEFAULT_CHAMPIONS: LeaderboardEntry[] = [
 export function computeLocalLeaderboard(): LeaderboardEntry[] {
   const playerMap = new Map<string, LeaderboardEntry>();
 
-  // 1. Seed baseline champion(s)
-  for (const champ of DEFAULT_CHAMPIONS) {
-    playerMap.set(champ.username.toLowerCase(), { ...champ, form: [...champ.form] });
-  }
-
-  // 2. Load registered players
+  // 1. Load active user if present
   try {
-    const rawPlayers = localStorage.getItem('vicky_chess_all_players_v1');
-    if (rawPlayers) {
-      const players: UserProfile[] = JSON.parse(rawPlayers);
-      if (Array.isArray(players)) {
-        for (const p of players) {
-          if (!p || !p.username) continue;
-          const uKey = p.username.toLowerCase();
-          if (!playerMap.has(uKey)) {
-            playerMap.set(uKey, {
-              rank: 0,
-              username: p.username,
-              name: p.name || p.username,
-              rating: p.rating || 1200,
-              avatar: p.avatar || '♟️',
-              title: p.title || 'Challenger',
-              totalMatches: 0,
-              wins: 0,
-              losses: 0,
-              draws: 0,
-              winRate: 0,
-              form: [],
-              createdAt: Date.now() / 1000,
-            });
-          }
-        }
-      }
-    }
-  } catch {
-    // ignore
-  }
-
-  // 3. Load active user if present
-  try {
-    const rawCur = localStorage.getItem('vicky_current_user');
+    const rawCur = localStorage.getItem('vicky_chess_player_v1') || localStorage.getItem('vicky_current_user');
     if (rawCur) {
       const cur: UserProfile = JSON.parse(rawCur);
       if (cur && cur.username) {
         const uKey = cur.username.toLowerCase();
-        if (!playerMap.has(uKey)) {
-          playerMap.set(uKey, {
-            rank: 0,
-            username: cur.username,
-            name: cur.name || cur.username,
-            rating: cur.rating || 1200,
-            avatar: cur.avatar || '🦁',
-            title: cur.title || 'Challenger',
-            totalMatches: 0,
-            wins: 0,
-            losses: 0,
-            draws: 0,
-            winRate: 0,
-            form: [],
-            createdAt: Date.now() / 1000,
-          });
-        }
+        playerMap.set(uKey, {
+          rank: 0,
+          username: cur.username,
+          name: cur.name || cur.username,
+          rating: cur.rating || 1200,
+          avatar: cur.avatar || '🦁',
+          title: cur.title || 'Challenger',
+          totalMatches: 0,
+          wins: 0,
+          losses: 0,
+          draws: 0,
+          winRate: 0,
+          form: [],
+          createdAt: Date.now() / 1000,
+        });
       }
     }
   } catch {
@@ -395,36 +334,52 @@ export async function dbGetLeaderboard(): Promise<{
   totalPlayers: number;
   leaderboard: LeaderboardEntry[];
 }> {
-  // Try remote backend if reachable with fast 600ms timeout
+  // 1. Fetch live Leaderboard from MongoDB Atlas (Render Cloud) with 6s timeout
   try {
-    const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
-    const isLocalHost =
-      typeof window !== 'undefined' &&
-      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 6000);
 
-    if (isLocalHost || !API_BASE.startsWith('http://127.0.0.1')) {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 600);
+    const res = await fetch(`${API_BASE}/leaderboard`, { signal: controller.signal });
+    clearTimeout(timeout);
 
-      const res = await fetch(`${API_BASE}/leaderboard`, { signal: controller.signal });
-      clearTimeout(timeout);
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.leaderboard && data.leaderboard.length > 0) {
-          return {
-            database: data.database || 'mongodb',
-            totalPlayers: data.totalPlayers || data.leaderboard.length,
-            leaderboard: data.leaderboard as LeaderboardEntry[],
-          };
+    if (res.ok) {
+      const data = await res.json();
+      if (data.leaderboard && Array.isArray(data.leaderboard)) {
+        // Cache the live leaderboard for instant loading on subsequent views
+        try {
+          localStorage.setItem('vicky_cached_leaderboard', JSON.stringify(data.leaderboard));
+        } catch {
+          // ignore
         }
+        return {
+          database: data.database || 'mongodb',
+          totalPlayers: data.totalPlayers || data.leaderboard.length,
+          leaderboard: data.leaderboard as LeaderboardEntry[],
+        };
+      }
+    }
+  } catch (err) {
+    console.warn('Backend leaderboard fetch delayed or offline, loading cached standings:', err);
+  }
+
+  // 2. Read previously cached MongoDB Leaderboard if available
+  try {
+    const cached = localStorage.getItem('vicky_cached_leaderboard');
+    if (cached) {
+      const parsed: LeaderboardEntry[] = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return {
+          database: 'cached-mongodb',
+          totalPlayers: parsed.length,
+          leaderboard: parsed,
+        };
       }
     }
   } catch {
-    // Fall back to client storage
+    // ignore
   }
 
-  // Seamless client reactive fallback
+  // 3. Seamless client reactive fallback
   const localList = computeLocalLeaderboard();
   return {
     database: 'local-store',

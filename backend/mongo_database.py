@@ -135,6 +135,20 @@ def mongo_save_match(match_data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
     db.matches.update_one({"id": match_id}, {"$set": doc}, upsert=True)
+
+    # Dynamically update the player's rating in users collection
+    outcome_val = str(match_data.get("outcome") or "").lower()
+    if outcome_val in ["win", "loss"]:
+        delta = 16 if outcome_val == "win" else -16
+        existing_user = db.users.find_one({"username": username})
+        if existing_user:
+            cur_rating = int(existing_user.get("rating") or 1200)
+            new_rating = max(800, cur_rating + delta)
+            db.users.update_one(
+                {"username": username},
+                {"$set": {"rating": new_rating, "updatedAt": time.time()}}
+            )
+
     return {"id": match_id, "status": "saved", "database": "mongodb"}
 
 def mongo_get_user_matches(username: str) -> List[Dict[str, Any]]:

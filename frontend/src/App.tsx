@@ -20,6 +20,7 @@ export const App: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<NavTab>('home');
   const [targetReplayUser, setTargetReplayUser] = useState<string | null>(null);
   const [targetReplayGameId, setTargetReplayGameId] = useState<string | number | null>(null);
+  const [guestView, setGuestView] = useState<'login' | 'leaderboard'>('login');
 
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
     try {
@@ -145,6 +146,49 @@ export const App: React.FC = () => {
 
   // 1. Initial Gate: Login / Registration Screen First
   if (!isLoggedIn) {
+    if (guestView === 'leaderboard') {
+      return (
+        <div className="min-h-screen bg-[#121212] text-gray-100 flex flex-col font-sans selection:bg-[#81b64c] selection:text-white">
+          <header className="border-b border-[#2b2b30] bg-[#141416]/95 backdrop-blur px-6 py-4 sticky top-0 z-40">
+            <div className="max-w-7xl mx-auto flex items-center justify-between">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#81b64c] to-emerald-400 flex items-center justify-center text-white shadow-lg shadow-green-900/30">
+                  <Gamepad2 className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="flex items-center space-x-1.5">
+                    <span className="font-extrabold text-base tracking-tight text-white">VICKY AI CHESS</span>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-800/50">
+                      LEADERBOARD
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-gray-400 block -mt-0.5 font-medium">
+                    Official Global Challenger Standings
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setGuestView('login')}
+                className="px-5 py-2.5 rounded-xl bg-[#81b64c] hover:bg-[#95c65d] text-white font-extrabold text-xs shadow-md transition-all cursor-pointer"
+              >
+                Sign In / Register
+              </button>
+            </div>
+          </header>
+
+          <main className="flex-1 pb-16">
+            <LeaderboardPage
+              currentUser={null}
+              onStartGame={() => setGuestView('login')}
+              onNavigateLogin={() => setGuestView('login')}
+            />
+          </main>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen bg-[#121212] text-gray-100 flex flex-col font-sans selection:bg-[#81b64c] selection:text-white">
         {/* Minimal Login Header */}
@@ -167,9 +211,18 @@ export const App: React.FC = () => {
               </div>
             </div>
 
-            <div className="text-xs text-gray-400 hidden sm:flex items-center space-x-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Stockfish 18 Engine + Master Model Ready</span>
+            <div className="flex items-center space-x-3">
+              <button
+                type="button"
+                onClick={() => setGuestView('leaderboard')}
+                className="px-3.5 py-2 rounded-xl bg-[#202026] hover:bg-[#2c2c34] text-amber-300 border border-amber-500/30 text-xs font-bold transition-all cursor-pointer hidden sm:flex items-center space-x-1.5"
+              >
+                <span>🏆 Leaderboard</span>
+              </button>
+              <div className="text-xs text-gray-400 hidden md:flex items-center space-x-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Stockfish 18 Engine Ready</span>
+              </div>
             </div>
           </div>
         </header>
@@ -181,6 +234,7 @@ export const App: React.FC = () => {
             onLogin={handleLoginUser}
             onEnterDashboard={handleEnterDashboard}
             onPlay={handlePlayWithUser}
+            onViewLeaderboard={() => setGuestView('leaderboard')}
           />
         </main>
       </div>
