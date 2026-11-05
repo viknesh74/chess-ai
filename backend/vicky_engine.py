@@ -360,7 +360,7 @@ class VickyChessEngine:
             "material_balance": material_balance
         }
 
-    def select_vicky_move(self, fen: str, personalization_weight: float = 0.65, history_moves: list = None, difficulty: str = "master"):
+    def select_vicky_move(self, fen: str, personalization_weight: float = 0.65, history_moves: list = None, difficulty: str = "master", play_like_viknesh: bool = False):
         board = chess.Board(fen)
         legal_moves = list(board.legal_moves)
         
@@ -415,7 +415,7 @@ class VickyChessEngine:
                                 "topCandidates": [
                                     {"san": san_book, "uci": book_uci, "style": 1.0, "eval": 0}
                                 ],
-                                "aiLevel": "MASTER (High Accuracy Viknesh)",
+                                "aiLevel": "VIKNESH (Exact Human Mirror)" if play_like_viknesh else "MASTER (High Accuracy Viknesh)",
                                 "isBookMove": True
                             }
                     except Exception:
@@ -484,11 +484,13 @@ class VickyChessEngine:
             # Effective style score
             effective_style = style_pref if is_sound else 0.01
 
-            # Combined score: Master AI prioritizes engine soundness while adopting Viknesh's attacking spirit
-            combined = (1.0 - personalization_weight) * norm_engine_score + personalization_weight * effective_style
-            
-            if is_sound and diff >= -15:
-                combined += 0.20 # Master soundness bonus
+            # Combined score: If play_like_viknesh is True, play pure human Viknesh style without engine overrides
+            if play_like_viknesh:
+                combined = style_pref
+            else:
+                combined = (1.0 - personalization_weight) * norm_engine_score + personalization_weight * effective_style
+                if is_sound and diff >= -15:
+                    combined += 0.20 # Master soundness bonus
 
             scored_candidates.append({
                 "move": move,
@@ -507,14 +509,21 @@ class VickyChessEngine:
         
         # Build explanation
         chosen_san = chosen["san"]
-        if board.fullmove_number <= 4:
+        if play_like_viknesh:
+            explanation = f"Vicky played {chosen_san} in pure Viknesh mode — exactly mirroring Viknesh's human tactical instincts from his game data."
+            ai_level_str = "VIKNESH (Exact Human Mirror)"
+        elif board.fullmove_number <= 4:
             explanation = f"Vicky deployed Viknesh's signature development move ({chosen_san}) with high tactical precision."
+            ai_level_str = "MASTER (High Accuracy Viknesh)"
         elif chosen["stylePref"] > 0.65 and chosen["isSound"]:
             explanation = f"Vicky played {chosen_san}, strongly capturing Viknesh's tactical attacking drive with master engine solidity."
+            ai_level_str = "MASTER (High Accuracy Viknesh)"
         elif chosen["isSound"]:
             explanation = f"Vicky selected {chosen_san}, enforcing master-level tactical solidity and central piece control."
+            ai_level_str = "MASTER (High Accuracy Viknesh)"
         else:
             explanation = f"Vicky executed {chosen_san} under tactical defense."
+            ai_level_str = "MASTER (High Accuracy Viknesh)"
 
         return {
             "uci": chosen["uci"],
@@ -527,7 +536,7 @@ class VickyChessEngine:
                 {"san": c["san"], "uci": c["uci"], "style": c["stylePref"], "eval": c["engineEval"]}
                 for c in scored_candidates[:4]
             ],
-            "aiLevel": "MASTER (High Accuracy Viknesh)",
+            "aiLevel": ai_level_str,
             "isBookMove": False
         }
 

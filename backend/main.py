@@ -56,6 +56,7 @@ class MoveRequest(BaseModel):
     personalizationWeight: Optional[float] = 0.65
     historyMoves: Optional[List[str]] = []
     difficulty: Optional[str] = "master"
+    playLikeViknesh: Optional[bool] = False
 
 class LoginRequest(BaseModel):
     username: str
@@ -207,12 +208,14 @@ def get_vicky_profile():
 @app.post("/api/vicky-move")
 def calculate_move(req: MoveRequest):
     try:
-        pw = req.personalizationWeight if req.personalizationWeight is not None else 0.65
+        pw = 1.0 if req.playLikeViknesh else (req.personalizationWeight if req.personalizationWeight is not None else 0.65)
+        diff = "viknesh" if req.playLikeViknesh else (req.difficulty or "master")
         result = engine.select_vicky_move(
             fen=req.fen,
             personalization_weight=pw,
             history_moves=req.historyMoves,
-            difficulty=req.difficulty or "master"
+            difficulty=diff,
+            play_like_viknesh=bool(req.playLikeViknesh)
         )
         if not result:
             raise HTTPException(status_code=400, detail="No legal moves available from this position.")

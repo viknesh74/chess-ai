@@ -280,10 +280,10 @@ export const PlayPage: React.FC<PlayPageProps> = ({
           hour: '2-digit',
           minute: '2-digit',
         }),
-        white: playerColor === 'w' ? `${displayName} (You)` : 'VICKY AI (Master)',
-        black: playerColor === 'b' ? `${displayName} (You)` : 'VICKY AI (Master)',
-        whiteElo: playerColor === 'w' ? String(currentUser?.rating || '1200') : '2200',
-        blackElo: playerColor === 'b' ? String(currentUser?.rating || '1200') : '2200',
+        white: playerColor === 'w' ? `${displayName} (You)` : (settings.playLikeViknesh ? 'Viknesh (Human Mirror)' : 'VICKY AI (Master)'),
+        black: playerColor === 'b' ? `${displayName} (You)` : (settings.playLikeViknesh ? 'Viknesh (Human Mirror)' : 'VICKY AI (Master)'),
+        whiteElo: playerColor === 'w' ? String(currentUser?.rating || '1200') : (settings.playLikeViknesh ? '1500' : '2200'),
+        blackElo: playerColor === 'b' ? String(currentUser?.rating || '1200') : (settings.playLikeViknesh ? '1500' : '2200'),
         result: outcome === 'win' ? '1-0' : outcome === 'loss' ? '0-1' : '1/2-1/2',
         outcome,
         userColor: playerColor === 'w' ? 'white' : 'black',
@@ -461,9 +461,10 @@ export const PlayPage: React.FC<PlayPageProps> = ({
       const decision = await getVickyMove(
         currentChess.fen(),
         movesHistory,
-        settings.personalizationWeight,
+        settings.playLikeViknesh ? 1.0 : settings.personalizationWeight,
         settings.stockfishDepth,
-        settings.difficulty || 'master'
+        settings.playLikeViknesh ? 'viknesh' : (settings.difficulty || 'master'),
+        Boolean(settings.playLikeViknesh)
       );
 
       setVickyDecision(decision);
@@ -645,9 +646,15 @@ export const PlayPage: React.FC<PlayPageProps> = ({
                 {playerName.toUpperCase()}
               </span>
               <span className="text-[10px] sm:text-xs text-gray-500 font-bold uppercase">vs</span>
-              <span className="text-xs sm:text-base font-extrabold text-[#81b64c]">VICKY AI</span>
-              <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-950/80 text-red-300 border border-red-700/60 shrink-0">
-                <span>🔥 MASTER AI</span>
+              <span className="text-xs sm:text-base font-extrabold text-[#81b64c]">
+                {settings.playLikeViknesh ? 'VIKNESH (MIRROR)' : 'VICKY AI'}
+              </span>
+              <span className={`hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider shrink-0 ${
+                settings.playLikeViknesh
+                  ? 'bg-purple-950/80 text-purple-300 border border-purple-700/60'
+                  : 'bg-red-950/80 text-red-300 border border-red-700/60'
+              }`}>
+                <span>{settings.playLikeViknesh ? '👤 HUMAN MIRROR' : '🔥 MASTER AI'}</span>
               </span>
             </div>
             <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-gray-400 mt-0.5">
@@ -660,8 +667,20 @@ export const PlayPage: React.FC<PlayPageProps> = ({
           </div>
         </div>
 
-        {/* Board Actions: Flip & Generate New Board */}
+        {/* Board Actions: Flip, Mode Switch & Generate New Board */}
         <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
+          <button
+            onClick={() => onUpdateSettings({ playLikeViknesh: !settings.playLikeViknesh })}
+            className={`flex items-center space-x-1 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+              settings.playLikeViknesh
+                ? 'bg-purple-950/90 border-purple-500/60 text-purple-300 shadow-md shadow-purple-950/30'
+                : 'bg-[#27272a] hover:bg-[#333] border-[#38383e] text-gray-300'
+            }`}
+            title={settings.playLikeViknesh ? "Playing exactly like Viknesh. Click to switch to Master Bot" : "Playing like VICKY AI Master Bot. Click to play exactly like Viknesh"}
+          >
+            <span>{settings.playLikeViknesh ? '👤 Viknesh Mode' : '🤖 Master Bot'}</span>
+          </button>
+
           {gameOver && !showGameOverModal && (
             <button
               onClick={() => setShowGameOverModal(true)}
@@ -701,8 +720,8 @@ export const PlayPage: React.FC<PlayPageProps> = ({
           <Clock
             timeSeconds={vickyTime}
             isActive={gameStarted && !gameOver && chess.turn() !== playerColor}
-            playerName="VICKY AI"
-            playerTitle="BOT"
+            playerName={settings.playLikeViknesh ? "VIKNESH (HUMAN)" : "VICKY AI"}
+            playerTitle={settings.playLikeViknesh ? "MIRROR" : "MASTER BOT"}
             isEngine={true}
           />
 

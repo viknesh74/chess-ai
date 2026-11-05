@@ -236,7 +236,8 @@ export async function getVickyMove(
   historyMoves: string[] = [],
   personalizationWeight: number = 0.65,
   stockfishDepth: number = 10,
-  difficulty: string = 'master'
+  difficulty: string = 'master',
+  playLikeViknesh: boolean = false
 ): Promise<VickyDecision> {
   // 1. First, attempt FastAPI backend if reachable locally (< 30ms)
   if (shouldAttemptBackend()) {
@@ -249,9 +250,10 @@ export async function getVickyMove(
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           fen,
-          personalizationWeight,
+          personalizationWeight: playLikeViknesh ? 1.0 : personalizationWeight,
           historyMoves,
-          difficulty,
+          difficulty: playLikeViknesh ? 'viknesh' : difficulty,
+          playLikeViknesh,
         }),
         signal: controller.signal,
       });
@@ -422,14 +424,18 @@ export async function getVickyMove(
       engineScoreNorm = 0.0;
     }
 
-    // STRICT ZERO-BLUNDER MULTIPLIER:
-    // Any move detected as a blunder gets an absolute floor score (0.00001)
-    let combined = isSound
-      ? (1 - personalizationWeight) * engineScoreNorm + personalizationWeight * styleScore
-      : 0.00001;
+    // In playLikeViknesh mode: score purely by Viknesh's learned human habits without engine override
+    let combined = 0;
+    if (playLikeViknesh) {
+      combined = styleScore;
+    } else {
+      combined = isSound
+        ? (1 - personalizationWeight) * engineScoreNorm + personalizationWeight * styleScore
+        : 0.00001;
 
-    if (isEngineMatch) {
-      combined += 0.40; // Decisive priority bonus for Stockfish's best move
+      if (isEngineMatch) {
+        combined += 0.40; // Decisive priority bonus for Stockfish's best move
+      }
     }
 
     return {
@@ -450,10 +456,11 @@ export async function getVickyMove(
   return {
     uci: bestChoice.uci,
     san: bestChoice.san,
-    explanation:
-      bestChoice.styleScore > 0.7
-        ? `Vicky executed ${bestChoice.san}, reflecting Viknesh's high-accuracy tactical mastery with engine soundness.`
-        : `Vicky chose ${bestChoice.san}, enforcing Master-level positional solidity and zero blunders.`,
+    explanation: playLikeViknesh
+      ? `Vicky played ${bestChoice.san} exactly mirroring Viknesh's natural human style and attacking instincts from his match data.`
+      : bestChoice.styleScore > 0.7
+      ? `Vicky executed ${bestChoice.san}, reflecting Viknesh's high-accuracy tactical mastery with engine soundness.`
+      : `Vicky chose ${bestChoice.san}, enforcing Master-level positional solidity and zero blunders.`,
     styleScore: Number(bestChoice.styleScore.toFixed(3)),
     engineEval: bestChoice.engineEval,
     combinedScore: Number(bestChoice.combinedScore.toFixed(3)),

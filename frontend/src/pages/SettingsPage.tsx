@@ -48,6 +48,55 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
       </div>
 
       <div className="space-y-6">
+        {/* Play Exactly Like Viknesh Checkbox / Toggle */}
+        <div className={`p-6 rounded-2xl border transition-all ${
+          settings.playLikeViknesh
+            ? 'bg-gradient-to-r from-purple-950/40 via-[#231b33] to-[#181424] border-purple-500/60 shadow-xl shadow-purple-950/30'
+            : 'bg-[#1e1e1e] border-[#2c2c30]'
+        }`}>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-start space-x-4">
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0 ${
+                settings.playLikeViknesh
+                  ? 'bg-gradient-to-tr from-purple-600 to-indigo-500 text-white shadow-lg shadow-purple-600/30'
+                  : 'bg-[#282830] text-gray-400'
+              }`}>
+                👤
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2.5">
+                  <h3 className="text-base font-extrabold text-white">Play Exactly Like Viknesh</h3>
+                  <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                    settings.playLikeViknesh
+                      ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40'
+                      : 'bg-gray-800 text-gray-400 border border-gray-700'
+                  }`}>
+                    {settings.playLikeViknesh ? 'EXACT HUMAN MIRROR' : 'MASTER BOT MODE'}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-300 leading-relaxed max-w-xl">
+                  {settings.playLikeViknesh ? (
+                    <span className="text-purple-300 font-bold">Checked: </span>
+                  ) : (
+                    <span className="text-gray-400">Checkbox: </span>
+                  )}
+                  When checked, Vicky acts and plays <strong className="text-white">exactly like Viknesh</strong> directly from all 441 historical games with natural human moves and attacking instincts (no engine overrides). When unchecked, plays as <strong className="text-[#81b64c]">VICKY AI (Master Bot)</strong> with Stockfish 18 tactical protection.
+                </p>
+              </div>
+            </div>
+
+            <label className="relative inline-flex items-center cursor-pointer shrink-0">
+              <input
+                type="checkbox"
+                checked={Boolean(settings.playLikeViknesh)}
+                onChange={(e) => onUpdateSettings({ playLikeViknesh: e.target.checked })}
+                className="sr-only peer"
+              />
+              <div className="w-14 h-7 bg-[#2e2e36] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-purple-600 shadow-inner"></div>
+            </label>
+          </div>
+        </div>
+
         {/* Personalization Weight Slider */}
         <div className="p-6 rounded-2xl bg-[#1e1e1e] border border-[#2c2c30] space-y-4">
           <div className="flex items-center justify-between">

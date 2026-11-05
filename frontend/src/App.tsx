@@ -324,7 +324,7 @@ export const App: React.FC = () => {
               Player: {currentUser ? `${currentUser.name.toUpperCase()} (${currentUser.rating} Elo)` : 'CHALLENGER'}
             </span>
             <span>•</span>
-            <span>Opponent: VICKY AI (Master)</span>
+            <span>Opponent: {settings.playLikeViknesh ? 'VIKNESH (Exact Human Mirror)' : 'VICKY AI (Master Bot)'}</span>
             <span>•</span>
             <span className="text-[#81b64c]">10+0 Rapid</span>
           </div>

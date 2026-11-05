@@ -64,6 +64,7 @@ export interface GameSettings {
   soundEnabled: boolean;
   autoFlip: boolean;
   playerColor: 'w' | 'b' | 'random';
+  playLikeViknesh?: boolean; // When checked: Plays exactly like Viknesh from dataset without engine overrides. When unchecked: Plays like VICKY AI (Master Bot).
 }
 
 export interface HighAccuracyProfile {
