@@ -41,7 +41,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onStartGame, onNavigate, cur
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
-            Play Against <span className="text-[#81b64c]">VICKY</span>, Your Personalized AI Mirror
+            Play Against <span className="text-[#81b64c]">VICKY</span>, Personalized AI Mirror of Viknesh
           </h1>
 
           <p className="text-base text-gray-300">
